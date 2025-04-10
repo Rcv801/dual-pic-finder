@@ -9,6 +9,7 @@ export interface ImageResult {
   imageUrl: string;
   title: string;
   source: string;
+  isFallback?: boolean;
 }
 
 // Mock data for demonstration purposes
@@ -48,17 +49,39 @@ const productImagesDatabase: Record<string, ImageResult[]> = {
     { id: "4", imageUrl: "https://images.unsplash.com/photo-1533425962554-8e7e8416dea4?q=80&w=2070&auto=format&fit=crop", title: "Canon camera", source: "Unsplash" },
     { id: "5", imageUrl: "https://images.unsplash.com/photo-1495707902641-75cac588d2e9?q=80&w=2070&auto=format&fit=crop", title: "Film camera", source: "Unsplash" },
   ],
+  "phone": [
+    { id: "1", imageUrl: "https://images.unsplash.com/photo-1598327105666-5b89351aff97?q=80&w=2627&auto=format&fit=crop", title: "Phone in hand", source: "Unsplash" },
+    { id: "2", imageUrl: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?q=80&w=2080&auto=format&fit=crop", title: "iPhone", source: "Unsplash" },
+    { id: "3", imageUrl: "https://images.unsplash.com/photo-1546054454-aa26e2b734c7?q=80&w=1160&auto=format&fit=crop", title: "Samsung phone", source: "Unsplash" },
+    { id: "4", imageUrl: "https://images.unsplash.com/photo-1533228876829-65c94e7b5025?q=80&w=2070&auto=format&fit=crop", title: "Phone and coffee", source: "Unsplash" },
+    { id: "5", imageUrl: "https://images.unsplash.com/photo-1616348436168-de43ad0db179?q=80&w=1981&auto=format&fit=crop", title: "Google phone", source: "Unsplash" },
+  ],
+  "computer": [
+    { id: "1", imageUrl: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?q=80&w=2071&auto=format&fit=crop", title: "Computer setup", source: "Unsplash" },
+    { id: "2", imageUrl: "https://images.unsplash.com/photo-1603302576837-37561b2e2302?q=80&w=1968&auto=format&fit=crop", title: "MacBook", source: "Unsplash" },
+    { id: "3", imageUrl: "https://images.unsplash.com/photo-1602080858428-57174f9431cf?q=80&w=2151&auto=format&fit=crop", title: "Laptop computer", source: "Unsplash" },
+    { id: "4", imageUrl: "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?q=80&w=2070&auto=format&fit=crop", title: "PC setup", source: "Unsplash" },
+    { id: "5", imageUrl: "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?q=80&w=2070&auto=format&fit=crop", title: "Desktop computer", source: "Unsplash" },
+  ],
+  "tablet": [
+    { id: "1", imageUrl: "https://images.unsplash.com/photo-1561154464-82e9adf32764?q=80&w=1974&auto=format&fit=crop", title: "iPad Pro", source: "Unsplash" },
+    { id: "2", imageUrl: "https://images.unsplash.com/photo-1623126908029-58c32ac92159?q=80&w=1972&auto=format&fit=crop", title: "Tablet device", source: "Unsplash" },
+    { id: "3", imageUrl: "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?q=80&w=1926&auto=format&fit=crop", title: "Tablet on desk", source: "Unsplash" },
+    { id: "4", imageUrl: "https://images.unsplash.com/photo-1588058365548-9ded0e3e3b24?q=80&w=2070&auto=format&fit=crop", title: "Android tablet", source: "Unsplash" },
+    { id: "5", imageUrl: "https://images.unsplash.com/photo-1589739900266-43b2843f4c12?q=80&w=1974&auto=format&fit=crop", title: "Drawing tablet", source: "Unsplash" },
+  ],
 };
 
 // Add more generic fallback images
 const fallbackImages: ImageResult[] = [
-  { id: "f1", imageUrl: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?q=80&w=2071&auto=format&fit=crop", title: "Generic product 1", source: "Unsplash" },
-  { id: "f2", imageUrl: "https://images.unsplash.com/photo-1603302576837-37561b2e2302?q=80&w=1968&auto=format&fit=crop", title: "Generic product 2", source: "Unsplash" },
-  { id: "f3", imageUrl: "https://images.unsplash.com/photo-1602080858428-57174f9431cf?q=80&w=2151&auto=format&fit=crop", title: "Generic product 3", source: "Unsplash" },
-  { id: "f4", imageUrl: "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?q=80&w=2070&auto=format&fit=crop", title: "Generic product 4", source: "Unsplash" },
-  { id: "f5", imageUrl: "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?q=80&w=2070&auto=format&fit=crop", title: "Generic product 5", source: "Unsplash" },
+  { id: "f1", imageUrl: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?q=80&w=2071&auto=format&fit=crop", title: "Generic product 1", source: "Unsplash", isFallback: true },
+  { id: "f2", imageUrl: "https://images.unsplash.com/photo-1603302576837-37561b2e2302?q=80&w=1968&auto=format&fit=crop", title: "Generic product 2", source: "Unsplash", isFallback: true },
+  { id: "f3", imageUrl: "https://images.unsplash.com/photo-1602080858428-57174f9431cf?q=80&w=2151&auto=format&fit=crop", title: "Generic product 3", source: "Unsplash", isFallback: true },
+  { id: "f4", imageUrl: "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?q=80&w=2070&auto=format&fit=crop", title: "Generic product 4", source: "Unsplash", isFallback: true },
+  { id: "f5", imageUrl: "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?q=80&w=2070&auto=format&fit=crop", title: "Generic product 5", source: "Unsplash", isFallback: true },
 ];
 
+// Improved search function with better keyword matching
 export const searchForProductImages = async (
   query: string,
   limit: number = 5
@@ -66,20 +89,43 @@ export const searchForProductImages = async (
   // Simulate API request delay
   await new Promise((resolve) => setTimeout(resolve, 800));
 
+  if (!query.trim()) {
+    return [];
+  }
+
   // Convert query to lowercase for case-insensitive matching
   const normalizedQuery = query.toLowerCase().trim();
   
-  // Find exact or partial matches in our database
-  const matchedQuery = Object.keys(productImagesDatabase).find(key => 
+  // First try exact matches
+  if (productImagesDatabase[normalizedQuery]) {
+    return productImagesDatabase[normalizedQuery].slice(0, limit);
+  }
+  
+  // Then try to find partial matches
+  const matches = Object.keys(productImagesDatabase).filter(key => 
     normalizedQuery.includes(key) || key.includes(normalizedQuery)
   );
   
-  if (matchedQuery) {
-    return productImagesDatabase[matchedQuery].slice(0, limit);
+  if (matches.length > 0) {
+    // Sort matches by relevance (shortest match = most specific)
+    matches.sort((a, b) => a.length - b.length);
+    const bestMatch = matches[0];
+    
+    // Return results for best match
+    const results = productImagesDatabase[bestMatch].map(img => ({
+      ...img,
+      title: `${normalizedQuery} - ${img.title}`
+    }));
+    
+    return results.slice(0, limit);
   }
   
-  // If we don't have a match, simulate a "search" by returning fallback images
-  // In a real app, this would call an external API
+  // If we don't have a match, notify using toast and return fallback images
+  toast.info("Using generic images", {
+    description: `No specific images found for "${query}". Showing generic alternatives.`,
+  });
+  
+  // Modify fallback images to include the search term
   const modifiedFallback = fallbackImages.map(img => ({
     ...img,
     title: `${query} - ${img.title}`,
