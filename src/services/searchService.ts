@@ -1,3 +1,4 @@
+
 // This service connects to an image search API to find product images
 
 import { toast } from "sonner";
@@ -37,7 +38,7 @@ export const searchForProductImages = async (
     const searchEngineId = "66105e0281119434f"; // Your Search Engine ID (cx value)
     
     // Check if both API key and search engine ID are properly configured
-    if (apiKey === "YOUR_ACTUAL_API_KEY") {
+    if (!apiKey || apiKey === "" || !searchEngineId || searchEngineId === "") {
       console.log(`API credentials not configured. Using fallback images for "${query}"`);
       toast.info("Using generic images", {
         description: `Live search requires API configuration. Using generic alternatives.`,
