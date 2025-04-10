@@ -38,7 +38,9 @@ export const searchForProductImages = async (
     const searchEngineId = "66105e0281119434f"; // Your Search Engine ID (cx value)
     
     // Check if both API key and search engine ID are properly configured
-    if (!apiKey || apiKey === "" || !searchEngineId || searchEngineId === "") {
+    const isConfigMissing = !apiKey || apiKey.length === 0 || !searchEngineId || searchEngineId.length === 0;
+    
+    if (isConfigMissing) {
       console.log(`API credentials not configured. Using fallback images for "${query}"`);
       toast.info("Using generic images", {
         description: `Live search requires API configuration. Using generic alternatives.`,
