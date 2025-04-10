@@ -2,25 +2,33 @@
 import { useState } from "react";
 import DualSearchForm from "@/components/DualSearchForm";
 import ImageResults from "@/components/ImageResults";
-import { ImageResult, performDualSearch } from "@/services/searchService";
+import { ImageResult, performMultiSearch } from "@/services/searchService";
 
 const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [product1Results, setProduct1Results] = useState<ImageResult[]>([]);
-  const [product2Results, setProduct2Results] = useState<ImageResult[]>([]);
-  const [searchTerms, setSearchTerms] = useState({ product1: "", product2: "" });
+  const [searchResults, setSearchResults] = useState<{ [key: string]: ImageResult[] }>({});
+  const [searchTerms, setSearchTerms] = useState<string[]>([]);
 
-  const handleSearch = async (product1: string, product2: string) => {
+  const handleSearch = async (products: string[]) => {
     setIsLoading(true);
-    setSearchTerms({ product1, product2 });
+    
+    // Filter out empty strings
+    const validProducts = products.filter(Boolean);
+    setSearchTerms(validProducts);
     
     try {
-      const { product1Results, product2Results } = await performDualSearch(product1, product2);
-      setProduct1Results(product1Results);
-      setProduct2Results(product2Results);
+      const results = await performMultiSearch(validProducts);
+      setSearchResults(results);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Calculate the grid columns based on search result count
+  const getGridCols = () => {
+    const resultCount = Object.keys(searchResults).length;
+    if (resultCount <= 2) return "lg:grid-cols-2";
+    return "lg:grid-cols-2 xl:grid-cols-2";
   };
 
   return (
@@ -28,10 +36,10 @@ const Index = () => {
       <header className="bg-white shadow-sm py-6">
         <div className="container mx-auto px-4">
           <h1 className="text-3xl font-bold text-brand-600 text-center">
-            Dual Product Image Finder
+            Multi-Product Image Finder
           </h1>
           <p className="text-center text-gray-600 mt-2">
-            Search for two products at once and compare their images
+            Search for up to four products at once and compare their images
           </p>
         </div>
       </header>
@@ -39,25 +47,27 @@ const Index = () => {
       <main className="container mx-auto px-4 py-8 space-y-8">
         <DualSearchForm onSearch={handleSearch} isLoading={isLoading} />
         
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {(product1Results.length > 0 || isLoading) && (
+        <div className={`grid grid-cols-1 ${getGridCols()} gap-8`}>
+          {Object.entries(searchResults).map(([term, results]) => (
             <ImageResults
-              title={`${searchTerms.product1 || "Product 1"} Images`}
-              results={product1Results}
+              key={term}
+              title={`${term} Images`}
+              results={results}
               isLoading={isLoading}
             />
-          )}
+          ))}
           
-          {(product2Results.length > 0 || isLoading) && (
+          {isLoading && searchTerms.map((term, index) => (
             <ImageResults
-              title={`${searchTerms.product2 || "Product 2"} Images`}
-              results={product2Results}
-              isLoading={isLoading}
+              key={`loading-${index}`}
+              title={`${term} Images`}
+              results={[]}
+              isLoading={true}
             />
-          )}
+          ))}
         </div>
         
-        {!isLoading && product1Results.length === 0 && product2Results.length === 0 && (
+        {!isLoading && Object.keys(searchResults).length === 0 && (
           <div className="text-center py-16">
             <h2 className="text-xl font-medium text-gray-600">
               Enter product names above to find images
@@ -71,7 +81,7 @@ const Index = () => {
 
       <footer className="bg-white border-t py-6">
         <div className="container mx-auto px-4 text-center text-gray-500 text-sm">
-          <p>Dual Product Image Finder &copy; {new Date().getFullYear()}</p>
+          <p>Multi-Product Image Finder &copy; {new Date().getFullYear()}</p>
           <p className="mt-1">Images provided by Unsplash for demonstration purposes</p>
         </div>
       </footer>

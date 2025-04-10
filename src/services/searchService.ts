@@ -1,4 +1,3 @@
-
 // This service connects to an image search API to find product images
 
 import { toast } from "sonner";
@@ -97,6 +96,46 @@ const getFallbackImages = (query: string, limit: number): ImageResult[] => {
   }));
 };
 
+export interface MultiSearchResults {
+  [key: string]: ImageResult[];
+}
+
+export const performMultiSearch = async (
+  queries: string[],
+  limit: number = 5
+): Promise<MultiSearchResults> => {
+  try {
+    if (!queries.filter(Boolean).length) {
+      toast("Please enter at least one search term", {
+        description: "You need to specify what products to search for",
+      });
+      return {};
+    }
+    
+    const validQueries = queries.filter(Boolean);
+    const searchPromises = validQueries.map(query => 
+      searchForProductImages(query, limit)
+    );
+    
+    const results = await Promise.all(searchPromises);
+    
+    // Create a result object with query as key and results as value
+    const searchResults: MultiSearchResults = {};
+    validQueries.forEach((query, index) => {
+      searchResults[query] = results[index];
+    });
+    
+    return searchResults;
+  } catch (error) {
+    toast("Search failed", {
+      description: "There was an error searching for product images",
+    });
+    console.error("Error in multi search:", error);
+    return {};
+  }
+};
+
+// Keep the existing dual search for backward compatibility
 export const performDualSearch = async (
   query1: string,
   query2: string,
