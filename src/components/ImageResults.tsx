@@ -1,7 +1,8 @@
 
 import { ImageResult } from "@/services/searchService";
 import { Card, CardContent } from "@/components/ui/card";
-import { ExternalLink, AlertCircle, Loader2 } from "lucide-react";
+import { ExternalLink, AlertCircle, Loader2, Info } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface ImageResultsProps {
   title: string;
@@ -36,6 +37,7 @@ const ImageResults = ({ title, results, isLoading }: ImageResultsProps) => {
   }
 
   // Check if all images are fallbacks
+  const allFallbacks = results.every(image => image.isFallback);
   const hasFallbackImages = results.some(image => image.isFallback);
 
   return (
@@ -49,6 +51,17 @@ const ImageResults = ({ title, results, isLoading }: ImageResultsProps) => {
           </div>
         )}
       </div>
+      
+      {allFallbacks && (
+        <Alert variant="default" className="bg-blue-50 text-blue-800 border-blue-200 mb-4">
+          <Info className="h-4 w-4" />
+          <AlertTitle>Demo Mode</AlertTitle>
+          <AlertDescription>
+            Currently showing generic images. Live web search requires a valid API key.
+          </AlertDescription>
+        </Alert>
+      )}
+      
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
         {results.map((image) => (
           <Card 

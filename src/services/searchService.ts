@@ -18,9 +18,12 @@ const fallbackImages: ImageResult[] = [
   { id: "f3", imageUrl: "https://images.unsplash.com/photo-1602080858428-57174f9431cf?q=80&w=2151&auto=format&fit=crop", title: "Generic product 3", source: "Unsplash", isFallback: true },
   { id: "f4", imageUrl: "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?q=80&w=2070&auto=format&fit=crop", title: "Generic product 4", source: "Unsplash", isFallback: true },
   { id: "f5", imageUrl: "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?q=80&w=2070&auto=format&fit=crop", title: "Generic product 5", source: "Unsplash", isFallback: true },
+  { id: "f6", imageUrl: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=1999&auto=format&fit=crop", title: "Generic product 6", source: "Unsplash", isFallback: true },
+  { id: "f7", imageUrl: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=2070&auto=format&fit=crop", title: "Generic product 7", source: "Unsplash", isFallback: true },
+  { id: "f8", imageUrl: "https://images.unsplash.com/photo-1572635196237-14b3f281503f?q=80&w=2080&auto=format&fit=crop", title: "Generic product 8", source: "Unsplash", isFallback: true },
 ];
 
-// Function to search the web for product images using Google Custom Search API
+// Function to search the web for product images
 export const searchForProductImages = async (
   query: string,
   limit: number = 5
@@ -30,9 +33,19 @@ export const searchForProductImages = async (
   }
 
   try {
-    // Google Search API endpoint with Custom Search Engine ID
-    const apiKey = "AIzaSyDXYAzpOx-Vq-N7l5coEFj0U9guqGnOKB4"; // This is a public API key for demonstration
-    const searchEngineId = "ef243df1895fd4c86"; // Demo search engine ID
+    // Note: API Key issue detected
+    // For demo purposes, we're directly using fallback images since the API key is invalid
+    console.log(`Searching for "${query}" images... Using fallbacks due to API key limitations`);
+    
+    toast.info("Using generic images", {
+      description: `Unable to perform live search for "${query}". Using generic alternatives.`,
+    });
+    
+    return getFallbackImages(query, limit);
+
+    /* Commented out due to API key issues
+    const apiKey = "YOUR_VALID_API_KEY"; // This key needs to be replaced with a valid one
+    const searchEngineId = "YOUR_SEARCH_ENGINE_ID"; 
     
     const url = `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${searchEngineId}&q=${encodeURIComponent(query)}&searchType=image&num=${limit}`;
     
@@ -64,6 +77,7 @@ export const searchForProductImages = async (
       source: new URL(item.image.contextLink).hostname || "Web Search",
       isFallback: false
     }));
+    */
   } catch (error) {
     console.error("Error searching for images:", error);
     toast.error("Image search failed", {
@@ -76,8 +90,9 @@ export const searchForProductImages = async (
 
 const getFallbackImages = (query: string, limit: number): ImageResult[] => {
   // Modify fallback images to include the search term
-  return fallbackImages.slice(0, limit).map(img => ({
+  return fallbackImages.slice(0, limit).map((img, index) => ({
     ...img,
+    id: `${query}-fallback-${index}`,
     title: `${query} - ${img.title}`,
   }));
 };
