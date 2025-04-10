@@ -33,19 +33,18 @@ export const searchForProductImages = async (
   }
 
   try {
-    // Note: API Key issue detected
-    // For demo purposes, we're directly using fallback images since the API key is invalid
-    console.log(`Searching for "${query}" images... Using fallbacks due to API key limitations`);
+    // Replace these with your actual API key and Search Engine ID
+    const apiKey = "YOUR_GOOGLE_API_KEY"; // Replace with your actual API key from Google Cloud
+    const searchEngineId = "YOUR_SEARCH_ENGINE_ID"; // Replace with your actual Search Engine ID (cx)
     
-    toast.info("Using generic images", {
-      description: `Unable to perform live search for "${query}". Using generic alternatives.`,
-    });
-    
-    return getFallbackImages(query, limit);
-
-    /* Commented out due to API key issues
-    const apiKey = "YOUR_VALID_API_KEY"; // This key needs to be replaced with a valid one
-    const searchEngineId = "YOUR_SEARCH_ENGINE_ID"; 
+    // Check if both API key and search engine ID are properly configured
+    if (apiKey === "YOUR_GOOGLE_API_KEY" || searchEngineId === "YOUR_SEARCH_ENGINE_ID") {
+      console.log(`API credentials not configured. Using fallback images for "${query}"`);
+      toast.info("Using generic images", {
+        description: `Live search requires API configuration. Using generic alternatives.`,
+      });
+      return getFallbackImages(query, limit);
+    }
     
     const url = `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${searchEngineId}&q=${encodeURIComponent(query)}&searchType=image&num=${limit}`;
     
@@ -77,7 +76,6 @@ export const searchForProductImages = async (
       source: new URL(item.image.contextLink).hostname || "Web Search",
       isFallback: false
     }));
-    */
   } catch (error) {
     console.error("Error searching for images:", error);
     toast.error("Image search failed", {
