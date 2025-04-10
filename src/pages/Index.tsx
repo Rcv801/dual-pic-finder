@@ -6,7 +6,7 @@ import { ImageResult, performMultiSearch } from "@/services/searchService";
 import SearchHistory from "@/components/SearchHistory";
 import ComparisonView from "@/components/ComparisonView";
 import { Button } from "@/components/ui/button";
-import { Compare } from "lucide-react";
+import { SplitSquareVertical } from "lucide-react";
 
 const MAX_HISTORY_ITEMS = 10;
 
@@ -115,7 +115,7 @@ const Index = () => {
                 onClick={() => setIsComparing(true)}
                 className="gap-2"
               >
-                <Compare className="h-4 w-4" />
+                <SplitSquareVertical className="h-4 w-4" />
                 Compare
               </Button>
             )}
