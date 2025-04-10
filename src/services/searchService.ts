@@ -34,11 +34,11 @@ export const searchForProductImages = async (
 
   try {
     // Replace these with your actual API key and Search Engine ID
-    const apiKey = "YOUR_GOOGLE_API_KEY"; // Replace with your actual API key from Google Cloud
-    const searchEngineId = "YOUR_SEARCH_ENGINE_ID"; // Replace with your actual Search Engine ID (cx)
+    const apiKey = "YOUR_ACTUAL_API_KEY"; // Replace with your API key from Google Cloud Console
+    const searchEngineId = "YOUR_ACTUAL_SEARCH_ENGINE_ID"; // Replace with your Search Engine ID (cx value)
     
     // Check if both API key and search engine ID are properly configured
-    if (apiKey === "YOUR_GOOGLE_API_KEY" || searchEngineId === "YOUR_SEARCH_ENGINE_ID") {
+    if (apiKey === "YOUR_ACTUAL_API_KEY" || searchEngineId === "YOUR_ACTUAL_SEARCH_ENGINE_ID") {
       console.log(`API credentials not configured. Using fallback images for "${query}"`);
       toast.info("Using generic images", {
         description: `Live search requires API configuration. Using generic alternatives.`,
