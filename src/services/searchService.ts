@@ -1,4 +1,3 @@
-
 // This service connects to an image search API to find product images
 
 import { toast } from "sonner";
@@ -34,7 +33,7 @@ export const searchForProductImages = async (
 
   try {
     // Replace these with your actual API key and Search Engine ID
-    const apiKey = "YOUR_ACTUAL_API_KEY"; // Replace with your API key from Google Cloud Console
+    const apiKey = "AIzaSyBpfBKhux1VwClNOMo3YM6MqFr_MiKOg1M"; // Your API key from Google Cloud Console
     const searchEngineId = "66105e0281119434f"; // Your Search Engine ID (cx value)
     
     // Check if both API key and search engine ID are properly configured
