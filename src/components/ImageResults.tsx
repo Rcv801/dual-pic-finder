@@ -1,7 +1,7 @@
 
 import { ImageResult } from "@/services/searchService";
 import { Card, CardContent } from "@/components/ui/card";
-import { ExternalLink, AlertCircle } from "lucide-react";
+import { ExternalLink, AlertCircle, Loader2 } from "lucide-react";
 
 interface ImageResultsProps {
   title: string;
@@ -17,7 +17,9 @@ const ImageResults = ({ title, results, isLoading }: ImageResultsProps) => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
           {Array.from({ length: 5 }).map((_, i) => (
             <Card key={i} className="overflow-hidden">
-              <div className="aspect-square bg-gray-200 animate-pulse" />
+              <div className="aspect-square bg-gray-200 animate-pulse flex items-center justify-center">
+                <Loader2 className="h-8 w-8 text-gray-400 animate-spin" />
+              </div>
               <CardContent className="p-3 space-y-2">
                 <div className="h-4 bg-gray-200 rounded animate-pulse" />
                 <div className="h-3 bg-gray-200 rounded w-1/2 animate-pulse" />
@@ -60,6 +62,10 @@ const ImageResults = ({ title, results, isLoading }: ImageResultsProps) => {
                 src={image.imageUrl}
                 alt={image.title}
                 className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                onError={(e) => {
+                  e.currentTarget.src = 'https://images.unsplash.com/photo-1599669454699-248893623440?q=80&w=2070&auto=format&fit=crop';
+                  e.currentTarget.alt = 'Image failed to load';
+                }}
               />
               {image.isFallback && (
                 <div className="absolute top-2 right-2 bg-amber-100 text-amber-800 rounded-full p-1">
