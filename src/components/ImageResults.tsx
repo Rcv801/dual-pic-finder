@@ -1,8 +1,12 @@
 
+import { useState } from "react";
 import { ImageResult } from "@/services/searchService";
 import { Card, CardContent } from "@/components/ui/card";
-import { ExternalLink, AlertCircle, Loader2, Info } from "lucide-react";
+import { ExternalLink, AlertCircle, Loader2, Info, Download } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import ImageDetailModal from "./ImageDetailModal";
+import { toast } from "sonner";
 
 interface ImageResultsProps {
   title: string;
@@ -11,6 +15,28 @@ interface ImageResultsProps {
 }
 
 const ImageResults = ({ title, results, isLoading }: ImageResultsProps) => {
+  const [selectedImage, setSelectedImage] = useState<ImageResult | null>(null);
+
+  const handleImageDownload = async (image: ImageResult) => {
+    try {
+      const response = await fetch(image.imageUrl);
+      const blob = await response.blob();
+      
+      // Create a temporary anchor element to trigger the download
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `${image.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.jpg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast.success("Image downloaded successfully");
+    } catch (error) {
+      console.error("Error downloading image:", error);
+      toast.error("Failed to download image");
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -70,7 +96,10 @@ const ImageResults = ({ title, results, isLoading }: ImageResultsProps) => {
               image.isFallback ? 'border-amber-200' : ''
             }`}
           >
-            <div className="aspect-square relative overflow-hidden">
+            <div 
+              className="aspect-square relative overflow-hidden cursor-pointer"
+              onClick={() => setSelectedImage(image)}
+            >
               <img
                 src={image.imageUrl}
                 alt={image.title}
@@ -87,7 +116,20 @@ const ImageResults = ({ title, results, isLoading }: ImageResultsProps) => {
               )}
             </div>
             <CardContent className="p-3 space-y-1">
-              <h3 className="font-medium text-sm line-clamp-1">{image.title}</h3>
+              <div className="flex justify-between items-center">
+                <h3 className="font-medium text-sm line-clamp-1">{image.title}</h3>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleImageDownload(image);
+                  }}
+                >
+                  <Download className="h-3.5 w-3.5" />
+                </Button>
+              </div>
               <div className="flex items-center text-xs text-gray-500">
                 <span>{image.source}</span>
                 <ExternalLink className="ml-1 h-3 w-3" />
@@ -96,6 +138,13 @@ const ImageResults = ({ title, results, isLoading }: ImageResultsProps) => {
           </Card>
         ))}
       </div>
+
+      <ImageDetailModal
+        image={selectedImage}
+        isOpen={!!selectedImage}
+        onClose={() => setSelectedImage(null)}
+        onDownload={handleImageDownload}
+      />
     </div>
   );
 };

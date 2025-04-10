@@ -1,13 +1,38 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import DualSearchForm from "@/components/DualSearchForm";
 import ImageResults from "@/components/ImageResults";
 import { ImageResult, performMultiSearch } from "@/services/searchService";
+import SearchHistory from "@/components/SearchHistory";
+import ComparisonView from "@/components/ComparisonView";
+import { Button } from "@/components/ui/button";
+import { Compare } from "lucide-react";
+
+const MAX_HISTORY_ITEMS = 10;
 
 const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [searchResults, setSearchResults] = useState<{ [key: string]: ImageResult[] }>({});
   const [searchTerms, setSearchTerms] = useState<string[]>([]);
+  const [searchHistory, setSearchHistory] = useState<string[][]>([]);
+  const [isComparing, setIsComparing] = useState(false);
+
+  // Load search history from localStorage on initial render
+  useEffect(() => {
+    const savedHistory = localStorage.getItem("searchHistory");
+    if (savedHistory) {
+      try {
+        setSearchHistory(JSON.parse(savedHistory));
+      } catch (e) {
+        console.error("Failed to parse search history:", e);
+      }
+    }
+  }, []);
+
+  // Save search history to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("searchHistory", JSON.stringify(searchHistory));
+  }, [searchHistory]);
 
   const handleSearch = async (products: string[]) => {
     setIsLoading(true);
@@ -19,9 +44,35 @@ const Index = () => {
     try {
       const results = await performMultiSearch(validProducts);
       setSearchResults(results);
+      
+      // Add to search history if we got results and it's not a duplicate
+      if (Object.keys(results).length > 0) {
+        const searchTermsString = JSON.stringify(validProducts.sort());
+        
+        // Check if this exact search already exists in history
+        const isDuplicate = searchHistory.some(
+          historyItem => JSON.stringify(historyItem.sort()) === searchTermsString
+        );
+        
+        if (!isDuplicate) {
+          // Add to beginning, limit to MAX_HISTORY_ITEMS
+          setSearchHistory(prev => [
+            validProducts,
+            ...prev.slice(0, MAX_HISTORY_ITEMS - 1)
+          ]);
+        }
+      }
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSelectHistory = (terms: string[]) => {
+    handleSearch(terms);
+  };
+
+  const handleClearHistory = () => {
+    setSearchHistory([]);
   };
 
   // Calculate the grid columns based on search result count
@@ -30,6 +81,8 @@ const Index = () => {
     if (resultCount <= 2) return "lg:grid-cols-2";
     return "lg:grid-cols-2 xl:grid-cols-2";
   };
+
+  const canCompare = Object.keys(searchResults).length > 1;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -45,7 +98,29 @@ const Index = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8 space-y-8">
-        <DualSearchForm onSearch={handleSearch} isLoading={isLoading} />
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <DualSearchForm onSearch={handleSearch} isLoading={isLoading} />
+          
+          <div className="flex gap-2 self-end">
+            <SearchHistory 
+              history={searchHistory}
+              onSelectHistory={handleSelectHistory}
+              onClearHistory={handleClearHistory}
+            />
+            
+            {canCompare && (
+              <Button 
+                variant="default"
+                size="sm"
+                onClick={() => setIsComparing(true)}
+                className="gap-2"
+              >
+                <Compare className="h-4 w-4" />
+                Compare
+              </Button>
+            )}
+          </div>
+        </div>
         
         <div className={`grid grid-cols-1 ${getGridCols()} gap-8`}>
           {Object.entries(searchResults).map(([term, results]) => (
@@ -78,6 +153,13 @@ const Index = () => {
           </div>
         )}
       </main>
+
+      {isComparing && (
+        <ComparisonView 
+          searchResults={searchResults}
+          onExit={() => setIsComparing(false)}
+        />
+      )}
 
       <footer className="bg-white border-t py-6">
         <div className="container mx-auto px-4 text-center text-gray-500 text-sm">
