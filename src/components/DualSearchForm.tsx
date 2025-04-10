@@ -10,7 +10,8 @@ interface MultiSearchFormProps {
 }
 
 const DualSearchForm = ({ onSearch, isLoading }: MultiSearchFormProps) => {
-  const [products, setProducts] = useState<string[]>(["", ""]);
+  // Start with just one product field
+  const [products, setProducts] = useState<string[]>([""]); 
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -39,7 +40,7 @@ const DualSearchForm = ({ onSearch, isLoading }: MultiSearchFormProps) => {
 
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-4xl mx-auto space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4">
         {products.map((product, index) => (
           <div key={index} className="space-y-2 relative">
             <label htmlFor={`product${index + 1}`} className="block text-sm font-medium">
