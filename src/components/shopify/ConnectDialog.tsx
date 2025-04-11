@@ -122,8 +122,8 @@ const ConnectDialog = ({ onConnect }: ConnectDialogProps) => {
             value={accessToken}
             onChange={setAccessToken}
             placeholder="shpat_xxxx..."
-            type="password"
             disabled={isValidating}
+            isPassword={true}
             helpText={<TokenHelpText />}
           />
           

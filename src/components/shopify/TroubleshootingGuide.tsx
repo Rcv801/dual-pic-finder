@@ -16,16 +16,16 @@ const TroubleshootingGuide = ({ visible }: TroubleshootingGuideProps) => {
         <ol className="list-decimal ml-4 space-y-1">
           <li>Verify that your store domain is correct (e.g., yourstore.myshopify.com)</li>
           <li>Ensure your API token has the necessary permissions (read_products, write_products)</li>
-          <li>Shopify blocks many CORS proxies - try installing a CORS-disabling browser extension like CORS Unblock (for development use only)</li>
+          <li>Shopify blocks many CORS proxies - try installing a CORS-disabling browser extension for development use only</li>
         </ol>
         <div className="mt-2 space-y-1">
           <a 
-            href="https://chrome.google.com/webstore/detail/cors-unblock/lfhmikememgdcahcdlaciloancbhjino" 
+            href="https://chrome.google.com/webstore/detail/allow-cors-access-control/lhobafahddgcelffkeicbaginigeejlf" 
             target="_blank" 
             rel="noopener noreferrer"
             className="flex items-center text-blue-600 hover:underline gap-1"
           >
-            <span>CORS Unblock Extension (Chrome)</span>
+            <span>Allow CORS Extension (Chrome)</span>
             <ExternalLink className="h-3 w-3" />
           </a>
           <a 
