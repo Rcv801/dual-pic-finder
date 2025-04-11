@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ShopifyCredentials, initiateShopifyAuth, storeShopifyCredentials } from "@/services/shopifyService";
+import { ShopifyCredentials, storeShopifyCredentials, testShopifyConnection } from "@/services/shopifyService";
 import { toast } from "sonner";
 
 interface ConnectDialogProps {
@@ -24,7 +24,7 @@ const ConnectDialog = ({ isOpen, onOpenChange }: ConnectDialogProps) => {
   const [isConnecting, setIsConnecting] = useState(false);
   const { register, handleSubmit, formState: { errors } } = useForm<ShopifyCredentials>();
 
-  const onSubmit = (data: ShopifyCredentials) => {
+  const onSubmit = async (data: ShopifyCredentials) => {
     try {
       setIsConnecting(true);
       
@@ -38,28 +38,28 @@ const ConnectDialog = ({ isOpen, onOpenChange }: ConnectDialogProps) => {
         }
       }
       
-      // Store credentials (without token yet)
+      // Prepare credentials
       const credentials: ShopifyCredentials = {
         apiKey: data.apiKey,
         apiSecretKey: data.apiSecretKey,
         shopDomain
       };
       
-      // Save credentials before redirecting
-      storeShopifyCredentials(credentials);
+      // Test connection before saving
+      const isConnected = await testShopifyConnection(credentials);
       
-      // Inform user about the redirect
-      toast.info("Redirecting to Shopify for authorization...");
-      
-      // Slight delay to allow the toast to be shown
-      setTimeout(() => {
-        // Start OAuth flow with a full page redirect to Shopify
-        initiateShopifyAuth(credentials);
-      }, 1000);
-      
+      if (isConnected) {
+        // Save credentials
+        storeShopifyCredentials(credentials);
+        toast.success("Successfully connected to Shopify!");
+        onOpenChange(false); // Close the dialog
+      } else {
+        toast.error("Failed to connect to Shopify. Please check your credentials.");
+      }
     } catch (error) {
       console.error("Error connecting to Shopify:", error);
       toast.error("Failed to connect to Shopify");
+    } finally {
       setIsConnecting(false);
     }
   };
