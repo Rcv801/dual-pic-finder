@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import DualSearchForm from "@/components/DualSearchForm";
 import ImageResults from "@/components/ImageResults";
@@ -7,6 +6,7 @@ import SearchHistory from "@/components/SearchHistory";
 import ComparisonView from "@/components/ComparisonView";
 import { Button } from "@/components/ui/button";
 import { SplitSquareVertical } from "lucide-react";
+import ShopifyConnect from "@/components/shopify/ShopifyConnect";
 
 const MAX_HISTORY_ITEMS = 10;
 
@@ -17,7 +17,6 @@ const Index = () => {
   const [searchHistory, setSearchHistory] = useState<string[][]>([]);
   const [isComparing, setIsComparing] = useState(false);
 
-  // Load search history from localStorage on initial render
   useEffect(() => {
     const savedHistory = localStorage.getItem("searchHistory");
     if (savedHistory) {
@@ -29,7 +28,6 @@ const Index = () => {
     }
   }, []);
 
-  // Save search history to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem("searchHistory", JSON.stringify(searchHistory));
   }, [searchHistory]);
@@ -37,7 +35,6 @@ const Index = () => {
   const handleSearch = async (products: string[]) => {
     setIsLoading(true);
     
-    // Filter out empty strings
     const validProducts = products.filter(Boolean);
     setSearchTerms(validProducts);
     
@@ -45,17 +42,14 @@ const Index = () => {
       const results = await performMultiSearch(validProducts);
       setSearchResults(results);
       
-      // Add to search history if we got results and it's not a duplicate
       if (Object.keys(results).length > 0) {
         const searchTermsString = JSON.stringify(validProducts.sort());
         
-        // Check if this exact search already exists in history
         const isDuplicate = searchHistory.some(
           historyItem => JSON.stringify(historyItem.sort()) === searchTermsString
         );
         
         if (!isDuplicate) {
-          // Add to beginning, limit to MAX_HISTORY_ITEMS
           setSearchHistory(prev => [
             validProducts,
             ...prev.slice(0, MAX_HISTORY_ITEMS - 1)
@@ -75,7 +69,6 @@ const Index = () => {
     setSearchHistory([]);
   };
 
-  // Calculate the grid columns based on search result count
   const getGridCols = () => {
     const resultCount = Object.keys(searchResults).length;
     if (resultCount <= 2) return "lg:grid-cols-2";
@@ -102,6 +95,8 @@ const Index = () => {
           <DualSearchForm onSearch={handleSearch} isLoading={isLoading} />
           
           <div className="flex gap-2 self-end">
+            <ShopifyConnect />
+            
             <SearchHistory 
               history={searchHistory}
               onSelectHistory={handleSelectHistory}
