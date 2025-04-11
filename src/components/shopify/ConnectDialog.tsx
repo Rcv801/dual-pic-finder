@@ -21,23 +21,21 @@ interface ConnectDialogProps {
   onConnected?: () => void;
 }
 
+// Use only the access token for authentication, shop domain is hardcoded
+interface ShopifyConnectFormData {
+  accessToken: string;
+}
+
 const ConnectDialog = ({ isOpen, onOpenChange, onConnected }: ConnectDialogProps) => {
   const [isConnecting, setIsConnecting] = useState(false);
-  const { register, handleSubmit, formState: { errors } } = useForm<ShopifyCredentials>();
+  const { register, handleSubmit, formState: { errors } } = useForm<ShopifyConnectFormData>();
 
-  const onSubmit = async (data: ShopifyCredentials) => {
+  const onSubmit = async (data: ShopifyConnectFormData) => {
     try {
       setIsConnecting(true);
       
-      // Ensure the shop domain is in the expected format
-      let shopDomain = data.shopDomain;
-      if (!shopDomain.includes("myshopify.com")) {
-        if (!shopDomain.includes(".")) {
-          shopDomain = `${shopDomain}.myshopify.com`;
-        } else {
-          shopDomain = shopDomain.trim();
-        }
-      }
+      // Use the hardcoded shop domain as specified
+      const shopDomain = "8oasis.myshopify.com";
       
       // Prepare credentials
       const credentials: ShopifyCredentials = {
@@ -60,7 +58,7 @@ const ConnectDialog = ({ isOpen, onOpenChange, onConnected }: ConnectDialogProps
         
         onOpenChange(false); // Close the dialog
       } else {
-        toast.error("Failed to connect to Shopify. Please check your credentials.");
+        toast.error("Failed to connect to Shopify. Please check your Admin API Access Token.");
       }
     } catch (error) {
       console.error("Error connecting to Shopify:", error);
@@ -76,7 +74,7 @@ const ConnectDialog = ({ isOpen, onOpenChange, onConnected }: ConnectDialogProps
         <DialogHeader>
           <DialogTitle>Connect to Shopify</DialogTitle>
           <DialogDescription>
-            Enter your Shopify shop URL and Admin API Access Token to connect your store
+            Enter your Admin API Access Token to connect to your Shopify store
           </DialogDescription>
         </DialogHeader>
         
@@ -85,12 +83,11 @@ const ConnectDialog = ({ isOpen, onOpenChange, onConnected }: ConnectDialogProps
             <Label htmlFor="shopDomain">Shop URL</Label>
             <Input
               id="shopDomain"
-              placeholder="yourstore.myshopify.com"
-              {...register("shopDomain", { required: "Shop URL is required" })}
+              value="8oasis.myshopify.com"
+              disabled
+              className="bg-gray-100"
             />
-            {errors.shopDomain && (
-              <p className="text-sm text-red-500">{errors.shopDomain.message}</p>
-            )}
+            <p className="text-xs text-gray-500">Your Shopify store domain is pre-configured</p>
           </div>
           
           <div className="space-y-2">
