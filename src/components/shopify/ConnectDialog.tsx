@@ -17,6 +17,7 @@ import ConnectionError from "./ConnectionError";
 import TroubleshootingGuide from "./TroubleshootingGuide";
 import DomainHelpText from "./DomainHelpText";
 import TokenHelpText from "./TokenHelpText";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ConnectDialogProps {
   onConnect: () => void;
@@ -138,37 +139,38 @@ const ConnectDialog = ({ onConnect }: ConnectDialogProps) => {
             Enter your Shopify store details to connect
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4 py-4">
-          <ConnectionError error={connectionError} />
-          
-          <FormField
-            id="store-domain"
-            label="Store Domain"
-            value={storeDomain}
-            onChange={setStoreDomain}
-            placeholder="yourstore.myshopify.com"
-            disabled={isValidating || isTestingShopEndpoint}
-            helpText={<DomainHelpText />}
-          />
-          
-          <FormField
-            id="access-token"
-            label="Access Token"
-            value={accessToken}
-            onChange={setAccessToken}
-            placeholder="shpat_xxxx..."
-            disabled={isValidating || isTestingShopEndpoint}
-            isPassword={true}
-            helpText={<TokenHelpText />}
-          />
-          
-          <TroubleshootingGuide visible={connectionAttempts > 0} />
-          
-          <div className="text-xs text-amber-600">
-            <p>Note: Your credentials are stored locally in your browser.</p>
-          </div>
+        
+        <ScrollArea className="max-h-[70vh] pr-4 -mr-4">
+          <div className="space-y-4 py-4">
+            <ConnectionError error={connectionError} />
+            
+            <FormField
+              id="store-domain"
+              label="Store Domain"
+              value={storeDomain}
+              onChange={setStoreDomain}
+              placeholder="yourstore.myshopify.com"
+              disabled={isValidating || isTestingShopEndpoint}
+              helpText={<DomainHelpText />}
+            />
+            
+            <FormField
+              id="access-token"
+              label="Access Token"
+              value={accessToken}
+              onChange={setAccessToken}
+              placeholder="shpat_xxxx..."
+              disabled={isValidating || isTestingShopEndpoint}
+              isPassword={true}
+              helpText={<TokenHelpText />}
+            />
+            
+            <TroubleshootingGuide visible={connectionAttempts > 0} />
+            
+            <div className="text-xs text-amber-600">
+              <p>Note: Your credentials are stored locally in your browser.</p>
+            </div>
 
-          {connectionAttempts > 0 && (
             <Button 
               type="button" 
               variant="outline" 
@@ -189,9 +191,10 @@ const ConnectDialog = ({ onConnect }: ConnectDialogProps) => {
                 </>
               )}
             </Button>
-          )}
-        </div>
-        <div className="flex justify-end">
+          </div>
+        </ScrollArea>
+        
+        <div className="flex justify-end pt-4">
           <Button onClick={handleConnect} disabled={isValidating || isTestingShopEndpoint}>
             {isValidating ? (
               <>

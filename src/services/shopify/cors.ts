@@ -1,11 +1,12 @@
 
 // Available CORS proxies to try (in order of preference)
 export const CORS_PROXIES = [
-  'direct', // Try direct connection first
-  'https://api.allorigins.win/raw?url=',
+  'direct', // Try direct connection first (this often works in development with CORS extensions)
   'https://corsproxy.io/?',
   'https://thingproxy.freeboard.io/fetch/',
-  'https://cors-anywhere.herokuapp.com/',  // This one often requires authorization
+  'https://api.allorigins.win/raw?url=',
+  // cors-anywhere requires authorization so it's less useful as first option
+  'https://cors-anywhere.herokuapp.com/',  
 ];
 
 // Track which proxy is currently working

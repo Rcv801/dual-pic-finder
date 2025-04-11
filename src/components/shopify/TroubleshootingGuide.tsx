@@ -22,22 +22,22 @@ const TroubleshootingGuide = ({ visible }: TroubleshootingGuideProps) => {
         <div className="mt-2">
           <p><strong>Recommended solutions:</strong></p>
           <ul className="list-disc ml-4 space-y-1">
-            <li>Try the "Try /shop.json endpoint" button below to test a simpler API endpoint</li>
+            <li>Try the "Try /shop.json endpoint" button to test a simpler API endpoint</li>
             <li>Install a CORS-disabling browser extension (for development only)</li>
           </ul>
         </div>
         <div className="mt-2 space-y-1">
           <a 
-            href="https://chrome.google.com/webstore/detail/cors-unblock/lfhmikememgdcahcdlaciloancbhjino" 
+            href="https://chrome.google.com/webstore/detail/moesif-origin-cors-change/digfbfaphojjndkpccljibejjbppifbc" 
             target="_blank" 
             rel="noopener noreferrer"
             className="flex items-center text-blue-600 hover:underline gap-1"
           >
-            <span>CORS Unblock Extension (Chrome)</span>
+            <span>Moesif CORS Extension (Chrome)</span>
             <ExternalLink className="h-3 w-3" />
           </a>
           <a 
-            href="https://addons.mozilla.org/en-US/firefox/addon/cors-everywhere/" 
+            href="https://addons.mozilla.org/en-US/firefox/addon/access-control-allow-origin/" 
             target="_blank" 
             rel="noopener noreferrer"
             className="flex items-center text-blue-600 hover:underline gap-1"

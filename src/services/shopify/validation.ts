@@ -25,7 +25,8 @@ export const validateShopifyCredentials = async (credentials: ShopifyCredentials
     await makeShopifyApiRequest({
       endpoint: 'products.json?limit=1',
       customDomain: storeDomain,
-      customToken: accessToken
+      customToken: accessToken,
+      maxAttempts: 3  // Limit attempts to prevent too many retries
     });
     
     // If we get here, the credentials are valid
