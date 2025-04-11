@@ -3,8 +3,8 @@ import { ShopifyProduct } from "@/services/shopify";
 import { SearchBar } from "./SearchBar";
 import { ProductList } from "./ProductList";
 import { PaginationControls } from "./PaginationControls";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertTriangle, RefreshCcw } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertTriangle, ExternalLink, RefreshCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface ExistingProductTabProps {
@@ -52,20 +52,28 @@ export function ExistingProductTab({
       {error && (
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
-          <AlertDescription className="flex items-center justify-between">
-            <span>{error}</span>
-            {retryLoading && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={retryLoading}
-                className="ml-2"
-              >
-                <RefreshCcw className="h-3 w-3 mr-2" />
-                Retry
-              </Button>
-            )}
-          </AlertDescription>
+          <div className="w-full">
+            <AlertTitle>Connection Error</AlertTitle>
+            <AlertDescription className="flex flex-col space-y-2">
+              <span>{error}</span>
+              <div className="flex justify-between items-center mt-2">
+                <p className="text-xs text-gray-500">
+                  You might need to set up a serverless proxy for this to work reliably
+                </p>
+                {retryLoading && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={retryLoading}
+                    className="ml-2"
+                  >
+                    <RefreshCcw className="h-3 w-3 mr-2" />
+                    Retry
+                  </Button>
+                )}
+              </div>
+            </AlertDescription>
+          </div>
         </Alert>
       )}
 

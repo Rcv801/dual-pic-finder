@@ -51,9 +51,21 @@ export function useProductsLoader() {
         setProducts([]);
         setHasNextPage(false);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error loading products:", error);
-      setError("Failed to load products. You may have reached the API rate limit. Please try again later.");
+      
+      // Provide more detailed error information
+      let errorMessage = "Failed to load products. ";
+      
+      if (error.message.includes("rate limit") || error.message.includes("429")) {
+        errorMessage += "You've hit API rate limits. ";
+      } else if (error.message.includes("CORS") || error.message.includes("Origin")) {
+        errorMessage += "CORS proxy service is returning errors. ";
+      }
+      
+      errorMessage += "Consider setting up a serverless proxy function.";
+      setError(errorMessage);
+      
       // Show empty state on error
       setProducts([]);
       setHasNextPage(false);

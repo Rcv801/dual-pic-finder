@@ -19,28 +19,28 @@ export const makeShopifyRequest = async (
   const { shopDomain, accessToken } = credentials;
   
   try {
-    // Use CORS proxy to avoid CORS issues
-    const corsProxy = "https://cors-anywhere.herokuapp.com/";
-    const targetUrl = `https://${shopDomain}/admin/api/2025-04/${endpoint}`;
+    // Use our serverless proxy endpoint instead of direct CORS proxy
+    const proxyUrl = "https://shopifyproxy.onrender.com/proxy";
     
     const options: RequestInit = {
-      method,
+      method: "POST", // Always POST to our proxy
       headers: {
         "Content-Type": "application/json",
-        "X-Shopify-Access-Token": accessToken,
-        "Origin": window.location.origin
-      }
+      },
+      body: JSON.stringify({
+        shopDomain,
+        accessToken,
+        targetEndpoint: endpoint,
+        method,
+        body: body || null,
+      }),
     };
     
-    if (body && (method === "POST" || method === "PUT")) {
-      options.body = JSON.stringify(body);
-    }
-    
-    const response = await fetch(`${corsProxy}${targetUrl}`, options);
+    const response = await fetch(proxyUrl, options);
     
     if (response.status === 429) {
       // Rate limit exceeded - implement exponential backoff
-      if (retryCount < 5) { // Increase max retries to 5
+      if (retryCount < 5) {
         const backoffTime = Math.pow(2, retryCount) * 1000; // Exponential backoff
         console.log(`Rate limited. Retrying in ${backoffTime}ms...`);
         
@@ -58,14 +58,16 @@ export const makeShopifyRequest = async (
     }
     
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`API Error (${response.status}):`, errorText);
-      throw new Error(`Shopify API request failed: ${response.status}`);
+      const errorData = await response.json().catch(() => ({}));
+      console.error(`API Error (${response.status}):`, errorData);
+      throw new Error(`Shopify API request failed: ${response.status} - ${errorData.message || 'Unknown error'}`);
     }
     
+    const responseData = await response.json();
+    
     return {
-      data: await response.json(),
-      headers: response.headers
+      data: responseData.data,
+      headers: new Headers(responseData.headers || {})
     };
   } catch (error) {
     console.error("Shopify API request failed:", error);
@@ -75,7 +77,7 @@ export const makeShopifyRequest = async (
 
 // Create a cache for API responses
 const apiCache = new Map<string, { data: any, timestamp: number, headers: Headers }>();
-const CACHE_TTL = 10 * 60 * 1000; // Increase cache time to 10 minutes
+const CACHE_TTL = 10 * 60 * 1000; // 10 minutes cache time
 
 // Function that adds caching to API requests
 export const cachedShopifyRequest = async (
