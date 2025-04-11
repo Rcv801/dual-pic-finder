@@ -1,4 +1,3 @@
-
 interface ShopifyCredentials {
   storeName: string;
   accessToken: string;
@@ -61,7 +60,7 @@ const getProxiedUrl = (endpoint: string, storeName: string): string => {
     return `${corsProxy}${encodeURIComponent(shopifyApiUrl)}`;
   }
   
-  return `${corsProxy}${encodeURIComponent(shopifyApiUrl)}`;
+  return `${corsProxy}${shopifyApiUrl}`;
 };
 
 // Try the next proxy in the list
@@ -73,6 +72,52 @@ const switchToNextProxy = (): boolean => {
   }
   // Reset to first proxy for next attempt
   currentProxyIndex = 0;
+  return false;
+};
+
+// Validate Shopify credentials by attempting to fetch products
+export const validateShopifyCredentials = async (credentials: ShopifyCredentials): Promise<boolean> => {
+  const { storeName, accessToken } = credentials;
+  
+  // Try all proxies if needed
+  let attemptsLeft = CORS_PROXIES.length;
+  
+  while (attemptsLeft > 0) {
+    try {
+      const apiUrl = getProxiedUrl('products.json?limit=1', storeName);
+      
+      console.log(`Validating credentials with store ${storeName} via proxy ${currentProxyIndex + 1}/${CORS_PROXIES.length}`);
+      
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Shopify-Access-Token': accessToken
+        }
+      });
+
+      if (!response.ok) {
+        console.error('Validation failed:', response.status, response.statusText);
+        throw new Error(`Shopify API error: ${response.status} ${response.statusText}`);
+      }
+
+      // If we get here, the credentials are valid
+      console.log('Shopify credentials validated successfully');
+      return true;
+    } catch (error) {
+      console.error(`Validation error with proxy ${currentProxyIndex + 1}/${CORS_PROXIES.length}:`, error);
+      
+      // Try next proxy
+      const hasMoreProxies = switchToNextProxy();
+      if (!hasMoreProxies) {
+        break; // No more proxies to try
+      }
+      
+      attemptsLeft--;
+    }
+  }
+  
+  // If we get here, all proxies failed
   return false;
 };
 

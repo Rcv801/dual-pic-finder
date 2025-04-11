@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Store } from "lucide-react";
+import { Store, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +12,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { saveShopifyCredentials } from "@/services/shopifyService";
+import { saveShopifyCredentials, validateShopifyCredentials } from "@/services/shopifyService";
 import { toast } from "sonner";
 
 interface ConnectDialogProps {
@@ -23,20 +23,40 @@ const ConnectDialog = ({ onConnect }: ConnectDialogProps) => {
   const [storeName, setStoreName] = useState("");
   const [accessToken, setAccessToken] = useState("");
   const [open, setOpen] = useState(false);
+  const [isValidating, setIsValidating] = useState(false);
 
-  const handleConnect = () => {
+  const handleConnect = async () => {
     if (!storeName.trim() || !accessToken.trim()) {
       toast.error("Please fill in all fields");
       return;
     }
 
+    // Show validation in progress
+    setIsValidating(true);
+
     try {
-      saveShopifyCredentials({ storeName: storeName.trim(), accessToken: accessToken.trim() });
-      toast.success("Connected to Shopify store");
-      setOpen(false);
-      onConnect();
+      // Try to validate the credentials by making a test API call
+      const credentials = { 
+        storeName: storeName.trim(), 
+        accessToken: accessToken.trim() 
+      };
+      
+      const isValid = await validateShopifyCredentials(credentials);
+      
+      if (isValid) {
+        // Save credentials only if they're valid
+        saveShopifyCredentials(credentials);
+        toast.success("Connected to Shopify store");
+        setOpen(false);
+        onConnect();
+      } else {
+        toast.error("Could not connect to Shopify. Please check your credentials and try again.");
+      }
     } catch (error) {
-      toast.error("Failed to save Shopify credentials");
+      console.error("Connection error:", error);
+      toast.error("Failed to connect to Shopify. Please check your credentials and try again.");
+    } finally {
+      setIsValidating(false);
     }
   };
 
@@ -63,6 +83,7 @@ const ConnectDialog = ({ onConnect }: ConnectDialogProps) => {
               placeholder="your-store-name"
               value={storeName}
               onChange={(e) => setStoreName(e.target.value)}
+              disabled={isValidating}
             />
             <p className="text-xs text-gray-500">
               The subdomain of your Shopify store (e.g., for store-name.myshopify.com, enter "store-name")
@@ -76,6 +97,7 @@ const ConnectDialog = ({ onConnect }: ConnectDialogProps) => {
               placeholder="shpat_xxxx..."
               value={accessToken}
               onChange={(e) => setAccessToken(e.target.value)}
+              disabled={isValidating}
             />
             <p className="text-xs text-gray-500">
               Your Shopify Admin API access token
@@ -86,7 +108,16 @@ const ConnectDialog = ({ onConnect }: ConnectDialogProps) => {
           </div>
         </div>
         <div className="flex justify-end">
-          <Button onClick={handleConnect}>Connect Store</Button>
+          <Button onClick={handleConnect} disabled={isValidating}>
+            {isValidating ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                Connecting...
+              </>
+            ) : (
+              "Connect Store"
+            )}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
