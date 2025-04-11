@@ -40,9 +40,8 @@ const ConnectDialog = ({ isOpen, onOpenChange }: ConnectDialogProps) => {
       
       // Prepare credentials
       const credentials: ShopifyCredentials = {
-        apiKey: data.apiKey,
-        apiSecretKey: data.apiSecretKey,
-        shopDomain
+        shopDomain,
+        accessToken: data.accessToken
       };
       
       // Test connection before saving
@@ -70,17 +69,17 @@ const ConnectDialog = ({ isOpen, onOpenChange }: ConnectDialogProps) => {
         <DialogHeader>
           <DialogTitle>Connect to Shopify</DialogTitle>
           <DialogDescription>
-            Enter your Shopify API credentials to connect your store
+            Enter your Shopify shop URL and Admin API Access Token to connect your store
           </DialogDescription>
         </DialogHeader>
         
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="shopDomain">Shop Domain</Label>
+            <Label htmlFor="shopDomain">Shop URL</Label>
             <Input
               id="shopDomain"
               placeholder="yourstore.myshopify.com"
-              {...register("shopDomain", { required: "Shop domain is required" })}
+              {...register("shopDomain", { required: "Shop URL is required" })}
             />
             {errors.shopDomain && (
               <p className="text-sm text-red-500">{errors.shopDomain.message}</p>
@@ -88,26 +87,14 @@ const ConnectDialog = ({ isOpen, onOpenChange }: ConnectDialogProps) => {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="apiKey">API Key</Label>
+            <Label htmlFor="accessToken">Admin API Access Token</Label>
             <Input
-              id="apiKey"
-              type="text"
-              {...register("apiKey", { required: "API Key is required" })}
-            />
-            {errors.apiKey && (
-              <p className="text-sm text-red-500">{errors.apiKey.message}</p>
-            )}
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="apiSecretKey">API Secret Key</Label>
-            <Input
-              id="apiSecretKey"
+              id="accessToken"
               type="password"
-              {...register("apiSecretKey", { required: "API Secret Key is required" })}
+              {...register("accessToken", { required: "Admin API Access Token is required" })}
             />
-            {errors.apiSecretKey && (
-              <p className="text-sm text-red-500">{errors.apiSecretKey.message}</p>
+            {errors.accessToken && (
+              <p className="text-sm text-red-500">{errors.accessToken.message}</p>
             )}
           </div>
           

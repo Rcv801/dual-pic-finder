@@ -1,12 +1,10 @@
 
 import { toast } from "sonner";
 
-// Types for Shopify credentials and tokens
+// Updated types for Shopify credentials using Direct Token Authentication
 export interface ShopifyCredentials {
-  apiKey: string;
-  apiSecretKey: string;
   shopDomain: string; // e.g., "yourstore.myshopify.com"
-  accessToken?: string;
+  accessToken: string; // Admin API Access Token
 }
 
 // Check if we have stored Shopify credentials
@@ -16,7 +14,7 @@ export const hasShopifyCredentials = (): boolean => {
   
   try {
     const parsed = JSON.parse(credentials) as ShopifyCredentials;
-    return !!(parsed.apiKey && parsed.shopDomain && parsed.apiSecretKey);
+    return !!(parsed.shopDomain && parsed.accessToken);
   } catch (e) {
     return false;
   }
@@ -45,9 +43,9 @@ export const clearShopifyCredentials = (): void => {
   localStorage.removeItem("shopify_credentials");
 };
 
-// Test the Shopify credentials by making a simple API call
+// Test the Shopify connection by making a simple API call
 export const testShopifyConnection = async (credentials: ShopifyCredentials): Promise<boolean> => {
-  const { apiKey, apiSecretKey, shopDomain } = credentials;
+  const { shopDomain, accessToken } = credentials;
   
   // We'll use a CORS proxy for this client-side implementation
   // In production, this should be handled server-side
@@ -62,7 +60,7 @@ export const testShopifyConnection = async (credentials: ShopifyCredentials): Pr
         headers: {
           "Content-Type": "application/json",
           "Origin": window.location.origin,
-          "X-Shopify-Access-Token": apiSecretKey // For private apps, the API secret key is used as the access token
+          "X-Shopify-Access-Token": accessToken // Using the Admin API Access Token
         }
       }
     );
@@ -90,7 +88,7 @@ export const uploadImageToShopify = async (
     return false;
   }
   
-  const { shopDomain, apiSecretKey } = credentials;
+  const { shopDomain, accessToken } = credentials;
   
   // First, create a new product with the image
   const corsProxy = "https://cors-anywhere.herokuapp.com/";
@@ -103,7 +101,7 @@ export const uploadImageToShopify = async (
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Shopify-Access-Token": apiSecretKey, // Use API secret key instead of access token
+          "X-Shopify-Access-Token": accessToken, // Using the Admin API Access Token
           "Origin": window.location.origin
         },
         body: JSON.stringify({
