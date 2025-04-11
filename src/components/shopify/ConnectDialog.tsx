@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Store, Loader2, ExternalLink, AlertTriangle } from "lucide-react";
+import { Store, Loader2, ExternalLink, AlertTriangle, RefreshCw } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -26,10 +26,18 @@ const ConnectDialog = ({ onConnect }: ConnectDialogProps) => {
   const [open, setOpen] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [connectionAttempts, setConnectionAttempts] = useState(0);
 
-  // Clean up domain input by removing https:// if present
+  // Clean up domain input by removing https:// if present and ensuring it has myshopify.com if needed
   const cleanDomain = (domain: string): string => {
-    return domain.trim().replace(/^https?:\/\//i, '');
+    let cleaned = domain.trim().replace(/^https?:\/\//i, '');
+    
+    // If it doesn't contain myshopify.com, assume it's a subdomain and add it
+    if (!cleaned.includes('myshopify.com') && !cleaned.includes('.')) {
+      cleaned = `${cleaned}.myshopify.com`;
+    }
+    
+    return cleaned;
   };
 
   const handleConnect = async () => {
@@ -43,10 +51,12 @@ const ConnectDialog = ({ onConnect }: ConnectDialogProps) => {
     
     // Show validation in progress
     setIsValidating(true);
+    setConnectionAttempts(prev => prev + 1);
 
     try {
       // Clean up domain and prepare credentials
       const cleanedDomain = cleanDomain(storeDomain);
+      console.log(`Attempting to validate credentials for domain: ${cleanedDomain}`);
       
       // Try to validate the credentials by making a test API call
       const credentials = { 
@@ -54,7 +64,6 @@ const ConnectDialog = ({ onConnect }: ConnectDialogProps) => {
         accessToken: accessToken.trim() 
       };
       
-      console.log(`Attempting to validate credentials for domain: ${cleanedDomain}`);
       const isValid = await validateShopifyCredentials(credentials);
       
       if (isValid) {
@@ -168,6 +177,40 @@ const ConnectDialog = ({ onConnect }: ConnectDialogProps) => {
               </p>
             </div>
           </div>
+          
+          {connectionAttempts > 0 && (
+            <Alert variant="warning" className="bg-amber-50 border-amber-200">
+              <div className="text-xs text-amber-700 space-y-2">
+                <p><strong>Connection troubleshooting:</strong></p>
+                <ol className="list-decimal ml-4 space-y-1">
+                  <li>Verify that your store domain is correct (e.g., yourstore.myshopify.com)</li>
+                  <li>Ensure your API token has the necessary permissions (read_products, write_products)</li>
+                  <li>Shopify blocks many CORS proxies - try installing a CORS-disabling browser extension like CORS Unblock (for development use only)</li>
+                </ol>
+                <div className="mt-2 space-y-1">
+                  <a 
+                    href="https://chrome.google.com/webstore/detail/cors-unblock/lfhmikememgdcahcdlaciloancbhjino" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center text-blue-600 hover:underline gap-1"
+                  >
+                    <span>CORS Unblock Extension (Chrome)</span>
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                  <a 
+                    href="https://addons.mozilla.org/en-US/firefox/addon/cors-everywhere/" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center text-blue-600 hover:underline gap-1"
+                  >
+                    <span>CORS Everywhere (Firefox)</span>
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+              </div>
+            </Alert>
+          )}
+          
           <div className="text-xs text-amber-600">
             <p>Note: Your credentials are stored locally in your browser.</p>
           </div>
@@ -178,6 +221,11 @@ const ConnectDialog = ({ onConnect }: ConnectDialogProps) => {
               <>
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 Connecting...
+              </>
+            ) : connectionAttempts > 0 ? (
+              <>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Try Again
               </>
             ) : (
               "Connect Store"

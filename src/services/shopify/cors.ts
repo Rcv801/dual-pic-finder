@@ -4,7 +4,8 @@ export const CORS_PROXIES = [
   'https://corsproxy.io/?',
   'https://cors-anywhere.herokuapp.com/',
   'https://api.allorigins.win/raw?url=',
-  'direct' // Add direct connection option (no proxy)
+  'https://thingproxy.freeboard.io/fetch/',  // Add another proxy option
+  'direct' // Direct connection option (no proxy)
 ];
 
 // Track which proxy is currently working
@@ -44,4 +45,9 @@ export const switchToNextProxy = (): boolean => {
   // Reset to first proxy for next attempt
   currentProxyIndex = 0;
   return false;
+};
+
+// Get the current proxy name for display purposes
+export const getCurrentProxyName = (): string => {
+  return CORS_PROXIES[currentProxyIndex];
 };
