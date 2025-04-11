@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ImageResult } from "@/services/searchService";
@@ -28,7 +29,6 @@ const ShopifyUploader = ({ image }: ShopifyUploaderProps) => {
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
-  const [isDirectUpload, setIsDirectUpload] = useState(false);
 
   const loadProducts = async () => {
     if (!hasShopifyCredentials()) {
@@ -49,8 +49,9 @@ const ShopifyUploader = ({ image }: ShopifyUploaderProps) => {
       }
     } catch (err) {
       console.error("Error fetching Shopify products:", err);
+      const errorMessage = err instanceof Error ? err.message : "Unknown error";
       setError(
-        "Failed to load products from Shopify. Please check your store connection and try again."
+        `Failed to load products from Shopify: ${errorMessage}. Please check your store connection and try again.`
       );
     } finally {
       setIsLoading(false);
@@ -62,7 +63,7 @@ const ShopifyUploader = ({ image }: ShopifyUploaderProps) => {
   }, []);
 
   const handleUpload = async () => {
-    if (!selectedProductId && !isDirectUpload) {
+    if (!selectedProductId) {
       toast.error("Please select a product first");
       return;
     }
@@ -72,12 +73,13 @@ const ShopifyUploader = ({ image }: ShopifyUploaderProps) => {
       await uploadImageToShopifyProduct(
         selectedProductId,
         image.imageUrl,
-        image.title
+        image.title || "Uploaded image"
       );
       toast.success("Image uploaded to product successfully");
     } catch (err) {
       console.error("Failed to upload image:", err);
-      toast.error("Failed to upload image to product. Please try again.");
+      const errorMessage = err instanceof Error ? err.message : "Unknown error";
+      toast.error(`Failed to upload image: ${errorMessage}`);
     } finally {
       setIsUploading(false);
     }

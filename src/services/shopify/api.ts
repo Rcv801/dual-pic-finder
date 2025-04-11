@@ -51,9 +51,12 @@ export const makeShopifyApiRequest = async <T>(options: ApiRequestOptions): Prom
         'X-Shopify-Access-Token': accessToken
       };
       
+      // Add mode: 'cors' to all requests to ensure CORS is handled properly
       const requestOptions: RequestInit = {
         method,
-        headers
+        headers,
+        mode: 'cors',
+        credentials: 'omit' // Don't send cookies to avoid CORS preflight issues
       };
       
       if (body) {
@@ -64,11 +67,12 @@ export const makeShopifyApiRequest = async <T>(options: ApiRequestOptions): Prom
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Shopify API error response:', errorText);
-        throw new Error(`Shopify API error: ${response.status} ${response.statusText}`);
+        console.error(`Shopify API error response (${response.status}):`, errorText);
+        throw new Error(`Shopify API error: ${response.status} ${response.statusText} - ${errorText.substring(0, 100)}`);
       }
 
       const data = await response.json();
+      console.log('Successful API response:', JSON.stringify(data).substring(0, 150) + '...');
       return data;
     } catch (error) {
       console.error(`Error in Shopify API request (Attempt ${maxAttempts - attemptsLeft + 1}/${maxAttempts}):`, error);
@@ -85,6 +89,5 @@ export const makeShopifyApiRequest = async <T>(options: ApiRequestOptions): Prom
   }
   
   // If we get here, all proxies failed
-  throw new Error(`All CORS proxies failed during API request. Last error: ${lastError?.message || 'Unknown error'}`);
+  throw new Error(`All connection methods failed during API request. Last error: ${lastError?.message || 'Unknown error'}`);
 };
-

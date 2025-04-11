@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Store, Loader2, ExternalLink } from "lucide-react";
+import { Store, Loader2, ExternalLink, AlertTriangle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -14,6 +14,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { saveShopifyCredentials, validateShopifyCredentials } from "@/services/shopify";
 import { toast } from "sonner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface ConnectDialogProps {
   onConnect: () => void;
@@ -24,6 +25,12 @@ const ConnectDialog = ({ onConnect }: ConnectDialogProps) => {
   const [accessToken, setAccessToken] = useState("");
   const [open, setOpen] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
+
+  // Clean up domain input by removing https:// if present
+  const cleanDomain = (domain: string): string => {
+    return domain.trim().replace(/^https?:\/\//i, '');
+  };
 
   const handleConnect = async () => {
     if (!storeDomain.trim() || !accessToken.trim()) {
@@ -31,16 +38,23 @@ const ConnectDialog = ({ onConnect }: ConnectDialogProps) => {
       return;
     }
 
+    // Reset previous error
+    setConnectionError(null);
+    
     // Show validation in progress
     setIsValidating(true);
 
     try {
+      // Clean up domain and prepare credentials
+      const cleanedDomain = cleanDomain(storeDomain);
+      
       // Try to validate the credentials by making a test API call
       const credentials = { 
-        storeDomain: storeDomain.trim(), 
+        storeDomain: cleanedDomain, 
         accessToken: accessToken.trim() 
       };
       
+      console.log(`Attempting to validate credentials for domain: ${cleanedDomain}`);
       const isValid = await validateShopifyCredentials(credentials);
       
       if (isValid) {
@@ -50,10 +64,13 @@ const ConnectDialog = ({ onConnect }: ConnectDialogProps) => {
         setOpen(false);
         onConnect();
       } else {
+        setConnectionError("Could not connect to Shopify. Please check your credentials and try again.");
         toast.error("Could not connect to Shopify. Please check your credentials and try again.");
       }
     } catch (error) {
       console.error("Connection error:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      setConnectionError(`Failed to connect to Shopify: ${errorMessage}`);
       toast.error("Failed to connect to Shopify. Please check your credentials and try again.");
     } finally {
       setIsValidating(false);
@@ -76,6 +93,13 @@ const ConnectDialog = ({ onConnect }: ConnectDialogProps) => {
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
+          {connectionError && (
+            <Alert variant="destructive" className="py-2">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription className="text-xs">{connectionError}</AlertDescription>
+            </Alert>
+          )}
+          
           <div className="space-y-2">
             <Label htmlFor="store-domain">Store Domain</Label>
             <Input
