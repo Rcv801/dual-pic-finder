@@ -1,8 +1,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Store, Loader2, ExternalLink, AlertTriangle, RefreshCw } from "lucide-react";
+import { Store, Loader2, RefreshCw } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -11,10 +10,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { saveShopifyCredentials, validateShopifyCredentials } from "@/services/shopify";
 import { toast } from "sonner";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import FormField from "./FormField";
+import ConnectionError from "./ConnectionError";
+import TroubleshootingGuide from "./TroubleshootingGuide";
+import DomainHelpText from "./DomainHelpText";
+import TokenHelpText from "./TokenHelpText";
 
 interface ConnectDialogProps {
   onConnect: () => void;
@@ -102,114 +104,30 @@ const ConnectDialog = ({ onConnect }: ConnectDialogProps) => {
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
-          {connectionError && (
-            <Alert variant="destructive" className="py-2">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription className="text-xs">{connectionError}</AlertDescription>
-            </Alert>
-          )}
+          <ConnectionError error={connectionError} />
           
-          <div className="space-y-2">
-            <Label htmlFor="store-domain">Store Domain</Label>
-            <Input
-              id="store-domain"
-              placeholder="yourstore.myshopify.com"
-              value={storeDomain}
-              onChange={(e) => setStoreDomain(e.target.value)}
-              disabled={isValidating}
-            />
-            <div className="text-xs text-gray-500 space-y-1">
-              <p>
-                Enter your full Shopify store domain (e.g., yourstore.myshopify.com)
-              </p>
-              <p>
-                To find it:
-              </p>
-              <ol className="list-decimal pl-4 space-y-1">
-                <li>Go to your Shopify admin dashboard</li>
-                <li>The domain should be visible in your browser URL bar</li>
-                <li>It typically looks like: yourstore.myshopify.com</li>
-              </ol>
-              <p>
-                <a 
-                  href="https://help.shopify.com/en/manual/domains" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="text-blue-600 hover:underline inline-flex items-center gap-1"
-                >
-                  Shopify domains guide
-                  <ExternalLink className="h-3 w-3" />
-                </a>
-              </p>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="access-token">Access Token</Label>
-            <Input
-              id="access-token"
-              type="password"
-              placeholder="shpat_xxxx..."
-              value={accessToken}
-              onChange={(e) => setAccessToken(e.target.value)}
-              disabled={isValidating}
-            />
-            <div className="text-xs text-gray-500 space-y-1">
-              <p>
-                Create a custom app and generate an Admin API access token:
-              </p>
-              <ol className="list-decimal pl-4 space-y-1">
-                <li>In Shopify admin, go to "Apps"</li>
-                <li>Click "Develop apps" or "App and sales channel settings"</li>
-                <li>Create a custom app</li>
-                <li>Under "Admin API integration" select required scopes (at minimum: read_products, write_products)</li>
-                <li>Generate an API access token</li>
-              </ol>
-              <p>
-                <a 
-                  href="https://shopify.dev/docs/apps/auth/admin-app-access-tokens" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="text-blue-600 hover:underline inline-flex items-center gap-1"
-                >
-                  Shopify access token guide
-                  <ExternalLink className="h-3 w-3" />
-                </a>
-              </p>
-            </div>
-          </div>
+          <FormField
+            id="store-domain"
+            label="Store Domain"
+            value={storeDomain}
+            onChange={setStoreDomain}
+            placeholder="yourstore.myshopify.com"
+            disabled={isValidating}
+            helpText={<DomainHelpText />}
+          />
           
-          {connectionAttempts > 0 && (
-            <Alert variant="default" className="bg-amber-50 border-amber-200">
-              <div className="text-xs text-amber-700 space-y-2">
-                <p><strong>Connection troubleshooting:</strong></p>
-                <ol className="list-decimal ml-4 space-y-1">
-                  <li>Verify that your store domain is correct (e.g., yourstore.myshopify.com)</li>
-                  <li>Ensure your API token has the necessary permissions (read_products, write_products)</li>
-                  <li>Shopify blocks many CORS proxies - try installing a CORS-disabling browser extension like CORS Unblock (for development use only)</li>
-                </ol>
-                <div className="mt-2 space-y-1">
-                  <a 
-                    href="https://chrome.google.com/webstore/detail/cors-unblock/lfhmikememgdcahcdlaciloancbhjino" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="flex items-center text-blue-600 hover:underline gap-1"
-                  >
-                    <span>CORS Unblock Extension (Chrome)</span>
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
-                  <a 
-                    href="https://addons.mozilla.org/en-US/firefox/addon/cors-everywhere/" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="flex items-center text-blue-600 hover:underline gap-1"
-                  >
-                    <span>CORS Everywhere (Firefox)</span>
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
-                </div>
-              </div>
-            </Alert>
-          )}
+          <FormField
+            id="access-token"
+            label="Access Token"
+            value={accessToken}
+            onChange={setAccessToken}
+            placeholder="shpat_xxxx..."
+            type="password"
+            disabled={isValidating}
+            helpText={<TokenHelpText />}
+          />
+          
+          <TroubleshootingGuide visible={connectionAttempts > 0} />
           
           <div className="text-xs text-amber-600">
             <p>Note: Your credentials are stored locally in your browser.</p>
