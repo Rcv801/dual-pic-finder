@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Store, Loader2 } from "lucide-react";
+import { Store, Loader2, ExternalLink } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -85,9 +85,31 @@ const ConnectDialog = ({ onConnect }: ConnectDialogProps) => {
               onChange={(e) => setStoreName(e.target.value)}
               disabled={isValidating}
             />
-            <p className="text-xs text-gray-500">
-              The subdomain of your Shopify store (e.g., for store-name.myshopify.com, enter "store-name")
-            </p>
+            <div className="text-xs text-gray-500 space-y-1">
+              <p>
+                Enter your Shopify store subdomain. This is the part before ".myshopify.com" in your store URL.
+              </p>
+              <p>
+                To find it:
+              </p>
+              <ol className="list-decimal pl-4 space-y-1">
+                <li>Go to your Shopify admin dashboard</li>
+                <li>Click on "Settings" (bottom left)</li>
+                <li>Go to "Store details"</li>
+                <li>Look for "Store ID" or check your current URL</li>
+              </ol>
+              <p>
+                <a 
+                  href="https://help.shopify.com/en/manual/intro-to-shopify/initial-setup/setup-business-settings" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-blue-600 hover:underline inline-flex items-center gap-1"
+                >
+                  Shopify setup guide
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              </p>
+            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="access-token">Access Token</Label>
@@ -99,9 +121,29 @@ const ConnectDialog = ({ onConnect }: ConnectDialogProps) => {
               onChange={(e) => setAccessToken(e.target.value)}
               disabled={isValidating}
             />
-            <p className="text-xs text-gray-500">
-              Your Shopify Admin API access token
-            </p>
+            <div className="text-xs text-gray-500 space-y-1">
+              <p>
+                Create a custom app and generate an Admin API access token:
+              </p>
+              <ol className="list-decimal pl-4 space-y-1">
+                <li>In Shopify admin, go to "Apps"</li>
+                <li>Click "Develop apps" or "App and sales channel settings"</li>
+                <li>Create a custom app</li>
+                <li>Under "Admin API integration" select required scopes (at minimum: read_products, write_products)</li>
+                <li>Generate an API access token</li>
+              </ol>
+              <p>
+                <a 
+                  href="https://shopify.dev/docs/apps/auth/admin-app-access-tokens" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-blue-600 hover:underline inline-flex items-center gap-1"
+                >
+                  Shopify access token guide
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              </p>
+            </div>
           </div>
           <div className="text-xs text-amber-600">
             <p>Note: Your credentials are stored locally in your browser.</p>
