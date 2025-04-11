@@ -21,7 +21,7 @@ const ConnectedStatus = ({ onDisconnect }: ConnectedStatusProps) => {
     <div className="flex items-center gap-2">
       <span className="text-sm text-green-600 flex items-center gap-1">
         <ShoppingBag className="h-4 w-4" />
-        Connected to {credentials?.storeName}.myshopify.com
+        Connected to {credentials?.storeDomain}
       </span>
       <Button 
         variant="ghost" 

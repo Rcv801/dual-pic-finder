@@ -20,13 +20,13 @@ interface ConnectDialogProps {
 }
 
 const ConnectDialog = ({ onConnect }: ConnectDialogProps) => {
-  const [storeName, setStoreName] = useState("");
+  const [storeDomain, setStoreDomain] = useState("");
   const [accessToken, setAccessToken] = useState("");
   const [open, setOpen] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
 
   const handleConnect = async () => {
-    if (!storeName.trim() || !accessToken.trim()) {
+    if (!storeDomain.trim() || !accessToken.trim()) {
       toast.error("Please fill in all fields");
       return;
     }
@@ -37,7 +37,7 @@ const ConnectDialog = ({ onConnect }: ConnectDialogProps) => {
     try {
       // Try to validate the credentials by making a test API call
       const credentials = { 
-        storeName: storeName.trim(), 
+        storeDomain: storeDomain.trim(), 
         accessToken: accessToken.trim() 
       };
       
@@ -77,35 +77,34 @@ const ConnectDialog = ({ onConnect }: ConnectDialogProps) => {
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="store-name">Store Name</Label>
+            <Label htmlFor="store-domain">Store Domain</Label>
             <Input
-              id="store-name"
-              placeholder="your-store-name"
-              value={storeName}
-              onChange={(e) => setStoreName(e.target.value)}
+              id="store-domain"
+              placeholder="yourstore.myshopify.com"
+              value={storeDomain}
+              onChange={(e) => setStoreDomain(e.target.value)}
               disabled={isValidating}
             />
             <div className="text-xs text-gray-500 space-y-1">
               <p>
-                Enter your Shopify store subdomain. This is the part before ".myshopify.com" in your store URL.
+                Enter your full Shopify store domain (e.g., yourstore.myshopify.com)
               </p>
               <p>
                 To find it:
               </p>
               <ol className="list-decimal pl-4 space-y-1">
                 <li>Go to your Shopify admin dashboard</li>
-                <li>Click on "Settings" (bottom left)</li>
-                <li>Go to "Store details"</li>
-                <li>Look for "Store ID" or check your current URL</li>
+                <li>The domain should be visible in your browser URL bar</li>
+                <li>It typically looks like: yourstore.myshopify.com</li>
               </ol>
               <p>
                 <a 
-                  href="https://help.shopify.com/en/manual/intro-to-shopify/initial-setup/setup-business-settings" 
+                  href="https://help.shopify.com/en/manual/domains" 
                   target="_blank" 
                   rel="noopener noreferrer" 
                   className="text-blue-600 hover:underline inline-flex items-center gap-1"
                 >
-                  Shopify setup guide
+                  Shopify domains guide
                   <ExternalLink className="h-3 w-3" />
                 </a>
               </p>

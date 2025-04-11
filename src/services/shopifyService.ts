@@ -1,5 +1,6 @@
+
 interface ShopifyCredentials {
-  storeName: string;
+  storeDomain: string;
   accessToken: string;
 }
 
@@ -49,8 +50,11 @@ const CORS_PROXIES = [
 let currentProxyIndex = 0;
 
 // Helper function to construct API URLs with CORS proxy
-const getProxiedUrl = (endpoint: string, storeName: string): string => {
-  const shopifyApiUrl = `https://${storeName}.myshopify.com/admin/api/2023-07/${endpoint}`;
+const getProxiedUrl = (endpoint: string, storeDomain: string): string => {
+  // Ensure we're working with just the domain, no protocol
+  const cleanDomain = storeDomain.replace(/^https?:\/\//i, '');
+  
+  const shopifyApiUrl = `https://${cleanDomain}/admin/api/2023-07/${endpoint}`;
   
   // Use the current proxy
   const corsProxy = CORS_PROXIES[currentProxyIndex];
@@ -77,16 +81,16 @@ const switchToNextProxy = (): boolean => {
 
 // Validate Shopify credentials by attempting to fetch products
 export const validateShopifyCredentials = async (credentials: ShopifyCredentials): Promise<boolean> => {
-  const { storeName, accessToken } = credentials;
+  const { storeDomain, accessToken } = credentials;
   
   // Try all proxies if needed
   let attemptsLeft = CORS_PROXIES.length;
   
   while (attemptsLeft > 0) {
     try {
-      const apiUrl = getProxiedUrl('products.json?limit=1', storeName);
+      const apiUrl = getProxiedUrl('products.json?limit=1', storeDomain);
       
-      console.log(`Validating credentials with store ${storeName} via proxy ${currentProxyIndex + 1}/${CORS_PROXIES.length}`);
+      console.log(`Validating credentials with store ${storeDomain} via proxy ${currentProxyIndex + 1}/${CORS_PROXIES.length}`);
       
       const response = await fetch(apiUrl, {
         method: 'GET',
@@ -128,7 +132,7 @@ export const fetchShopifyProducts = async (): Promise<ShopifyProduct[]> => {
     throw new Error('Shopify credentials not found');
   }
 
-  const { storeName, accessToken } = credentials;
+  const { storeDomain, accessToken } = credentials;
   
   // Try all proxies if needed
   let attemptsLeft = CORS_PROXIES.length;
@@ -136,7 +140,7 @@ export const fetchShopifyProducts = async (): Promise<ShopifyProduct[]> => {
   
   while (attemptsLeft > 0) {
     try {
-      const apiUrl = getProxiedUrl('products.json', storeName);
+      const apiUrl = getProxiedUrl('products.json', storeDomain);
       
       console.log(`Fetching products from: ${apiUrl} (Attempt ${CORS_PROXIES.length - attemptsLeft + 1}/${CORS_PROXIES.length})`);
       
@@ -186,7 +190,7 @@ export const uploadImageToShopifyProduct = async (
     throw new Error('Shopify credentials not found');
   }
 
-  const { storeName, accessToken } = credentials;
+  const { storeDomain, accessToken } = credentials;
   
   // Try all proxies if needed
   let attemptsLeft = CORS_PROXIES.length;
@@ -194,7 +198,7 @@ export const uploadImageToShopifyProduct = async (
   
   while (attemptsLeft > 0) {
     try {
-      const apiUrl = getProxiedUrl(`products/${productId}/images.json`, storeName);
+      const apiUrl = getProxiedUrl(`products/${productId}/images.json`, storeDomain);
       
       console.log(`Uploading image to product ${productId} via proxy ${currentProxyIndex + 1}/${CORS_PROXIES.length}`);
       
