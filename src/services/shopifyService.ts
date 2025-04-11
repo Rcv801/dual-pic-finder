@@ -45,7 +45,7 @@ export const clearShopifyCredentials = (): void => {
   localStorage.removeItem("shopify_credentials");
 };
 
-// Initialize OAuth flow - redirects to Shopify auth page
+// Initialize OAuth flow - performs a full browser redirect to Shopify auth page
 export const initiateShopifyAuth = (credentials: ShopifyCredentials): void => {
   const { apiKey, shopDomain } = credentials;
   
@@ -58,7 +58,7 @@ export const initiateShopifyAuth = (credentials: ShopifyCredentials): void => {
   // Build the authorization URL
   const authUrl = `https://${shopDomain}/admin/oauth/authorize?client_id=${apiKey}&scope=${scopes}&redirect_uri=${encodeURIComponent(redirectUri)}`;
   
-  // Redirect to Shopify authorization page
+  // Perform a full browser redirect to the Shopify authorization page
   window.location.href = authUrl;
 };
 
