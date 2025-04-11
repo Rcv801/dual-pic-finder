@@ -16,11 +16,6 @@ export const saveShopifyCredentials = (credentials: ShopifyCredentials): void =>
   localStorage.setItem('shopifyCredentials', JSON.stringify(credentials));
 };
 
-// Update existing credentials
-export const updateShopifyCredentials = (credentials: ShopifyCredentials): void => {
-  saveShopifyCredentials(credentials);
-};
-
 // Retrieve credentials from localStorage
 export const getShopifyCredentials = (): ShopifyCredentials | null => {
   const credentials = localStorage.getItem('shopifyCredentials');
