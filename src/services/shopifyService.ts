@@ -48,14 +48,20 @@ export const testShopifyConnection = async (credentials: ShopifyCredentials): Pr
   const { shopDomain, accessToken } = credentials;
   
   try {
-    // Try to fetch shop information to verify credentials
+    // Use CORS proxy to avoid CORS issues
+    const corsProxy = "https://cors-anywhere.herokuapp.com/";
+    const targetUrl = `https://${shopDomain}/admin/api/2025-04/shop.json`;
+    
+    console.log("Testing connection to:", targetUrl);
+    
     const response = await fetch(
-      `https://${shopDomain}/admin/api/2025-04/shop.json`,
+      `${corsProxy}${targetUrl}`,
       {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          "X-Shopify-Access-Token": accessToken
+          "X-Shopify-Access-Token": accessToken,
+          "Origin": window.location.origin
         }
       }
     );
@@ -65,7 +71,8 @@ export const testShopifyConnection = async (credentials: ShopifyCredentials): Pr
       return false;
     }
     
-    await response.json();
+    const data = await response.json();
+    console.log("Shopify connection successful:", data);
     return true;
   } catch (error) {
     console.error("Failed to test Shopify connection:", error);
@@ -87,14 +94,18 @@ export const uploadImageToShopify = async (
   const { shopDomain, accessToken } = credentials;
   
   try {
-    // Create a product with the image
+    // Use CORS proxy to avoid CORS issues
+    const corsProxy = "https://cors-anywhere.herokuapp.com/";
+    const targetUrl = `https://${shopDomain}/admin/api/2025-04/products.json`;
+    
     const response = await fetch(
-      `https://${shopDomain}/admin/api/2025-04/products.json`,
+      `${corsProxy}${targetUrl}`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Shopify-Access-Token": accessToken
+          "X-Shopify-Access-Token": accessToken,
+          "Origin": window.location.origin
         },
         body: JSON.stringify({
           product: {
@@ -113,7 +124,8 @@ export const uploadImageToShopify = async (
       throw new Error(`Failed to upload image: ${response.status}`);
     }
     
-    await response.json();
+    const data = await response.json();
+    console.log("Upload successful:", data);
     
     toast.success("Image uploaded to Shopify successfully!");
     return true;

@@ -14,6 +14,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ShopifyCredentials, storeShopifyCredentials, testShopifyConnection } from "@/services/shopifyService";
 import { toast } from "sonner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 interface ConnectDialogProps {
   isOpen: boolean;
@@ -28,11 +30,13 @@ interface ShopifyConnectFormData {
 
 const ConnectDialog = ({ isOpen, onOpenChange, onConnected }: ConnectDialogProps) => {
   const [isConnecting, setIsConnecting] = useState(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
   const { register, handleSubmit, formState: { errors } } = useForm<ShopifyConnectFormData>();
 
   const onSubmit = async (data: ShopifyConnectFormData) => {
     try {
       setIsConnecting(true);
+      setConnectionError(null);
       
       // Use the hardcoded shop domain as specified
       const shopDomain = "8oasis.myshopify.com";
@@ -42,6 +46,8 @@ const ConnectDialog = ({ isOpen, onOpenChange, onConnected }: ConnectDialogProps
         shopDomain,
         accessToken: data.accessToken
       };
+      
+      console.log("Attempting to connect with:", { shopDomain, accessTokenLength: data.accessToken.length });
       
       // Test connection before saving
       const isConnected = await testShopifyConnection(credentials);
@@ -58,10 +64,12 @@ const ConnectDialog = ({ isOpen, onOpenChange, onConnected }: ConnectDialogProps
         
         onOpenChange(false); // Close the dialog
       } else {
+        setConnectionError("Failed to connect to Shopify. This might be due to CORS restrictions. You need to allow CORS access for the CORS proxy first.");
         toast.error("Failed to connect to Shopify. Please check your Admin API Access Token.");
       }
     } catch (error) {
       console.error("Error connecting to Shopify:", error);
+      setConnectionError(`Error connecting to Shopify: ${error instanceof Error ? error.message : 'Unknown error'}`);
       toast.error("Failed to connect to Shopify");
     } finally {
       setIsConnecting(false);
@@ -79,6 +87,23 @@ const ConnectDialog = ({ isOpen, onOpenChange, onConnected }: ConnectDialogProps
         </DialogHeader>
         
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
+          {connectionError && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{connectionError}</AlertDescription>
+              <AlertDescription className="mt-2">
+                <a 
+                  href="https://cors-anywhere.herokuapp.com/corsdemo" 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="underline font-medium"
+                >
+                  Click here to request temporary access to the CORS proxy
+                </a>
+              </AlertDescription>
+            </Alert>
+          )}
+          
           <div className="space-y-2">
             <Label htmlFor="shopDomain">Shop URL</Label>
             <Input
