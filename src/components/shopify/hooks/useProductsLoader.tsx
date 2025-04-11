@@ -1,6 +1,7 @@
 
 import { useState, useCallback, useEffect } from "react";
-import { ShopifyProduct, ShopifyProductsResponse, fetchShopifyProducts } from "@/services/shopify";
+import { ShopifyProduct, ShopifyProductsResponse } from "@/services/shopify/types";
+import { fetchShopifyProducts, clearPaginationCache } from "@/services/shopify/products";
 import { toast } from "sonner";
 
 export function useProductsLoader() {
@@ -12,9 +13,12 @@ export function useProductsLoader() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchInputValue, setSearchInputValue] = useState("");
   const [totalProducts, setTotalProducts] = useState(0);
+  const [error, setError] = useState<string | null>(null);
 
   const loadProducts = useCallback(async (page: number, query: string) => {
     setIsLoadingProducts(true);
+    setError(null);
+    
     try {
       console.log(`Loading products for page ${page}, query: ${query}`);
       const response: ShopifyProductsResponse = await fetchShopifyProducts(page, 50, query);
@@ -38,9 +42,15 @@ export function useProductsLoader() {
         // Clear products for search with no results
         setProducts([]);
         setHasNextPage(false);
+        toast.info(`No products found matching "${query}"`);
+      } else if (page === 1) {
+        // No products at all in the store
+        setProducts([]);
+        setHasNextPage(false);
       }
     } catch (error) {
       console.error("Error loading products:", error);
+      setError("Failed to load products. You may have reached the API rate limit. Please try again later.");
       // Show empty state on error
       setProducts([]);
       setHasNextPage(false);
@@ -49,26 +59,33 @@ export function useProductsLoader() {
     }
   }, [selectedProductId]);
 
+  // Initial load of products
   useEffect(() => {
-    // Initial load of products
     loadProducts(1, "");
   }, []);
 
+  // Load products when page or search query changes
   useEffect(() => {
-    // Load products when page or search query changes
     loadProducts(currentPage, searchQuery);
   }, [currentPage, searchQuery, loadProducts]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    setSearchQuery(searchInputValue);
-    setCurrentPage(1); // Reset to first page when search changes
+    if (searchQuery !== searchInputValue) {
+      // Reset pagination cache when search query changes
+      clearPaginationCache();
+      setSearchQuery(searchInputValue);
+      setCurrentPage(1); // Reset to first page when search changes
+    }
   };
 
   const clearSearch = () => {
-    setSearchInputValue("");
-    setSearchQuery("");
-    setCurrentPage(1); // Reset to first page when search is cleared
+    if (searchQuery !== "") {
+      clearPaginationCache();
+      setSearchInputValue("");
+      setSearchQuery("");
+      setCurrentPage(1); // Reset to first page when search is cleared
+    }
   };
 
   const goToPage = (page: number) => {
@@ -85,6 +102,7 @@ export function useProductsLoader() {
     searchQuery,
     searchInputValue,
     totalProducts,
+    error,
     setSelectedProductId,
     setSearchInputValue,
     handleSearch,

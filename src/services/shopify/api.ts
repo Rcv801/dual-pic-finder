@@ -1,13 +1,14 @@
 
 import { toast } from "sonner";
-import { ShopifyCredentials, ShopifyProductsResponse } from "./types";
+import { ShopifyCredentials } from "./types";
 import { getShopifyCredentials } from "./credentials";
 
-// Base function to make authenticated Shopify API requests
+// Base function to make authenticated Shopify API requests with retry logic
 export const makeShopifyRequest = async (
   endpoint: string,
   method: string = "GET",
-  body?: any
+  body?: any,
+  retryCount: number = 0
 ): Promise<any> => {
   const credentials = getShopifyCredentials();
   if (!credentials) {
@@ -37,6 +38,19 @@ export const makeShopifyRequest = async (
     
     const response = await fetch(`${corsProxy}${targetUrl}`, options);
     
+    if (response.status === 429) {
+      // Rate limit exceeded - implement exponential backoff
+      if (retryCount < 3) {
+        const backoffTime = Math.pow(2, retryCount) * 1000; // Exponential backoff
+        console.log(`Rate limited. Retrying in ${backoffTime}ms...`);
+        await new Promise(resolve => setTimeout(resolve, backoffTime));
+        return makeShopifyRequest(endpoint, method, body, retryCount + 1);
+      } else {
+        toast.error("API rate limit exceeded. Please try again later.");
+        throw new Error("Shopify API rate limit exceeded");
+      }
+    }
+    
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`API Error (${response.status}):`, errorText);
@@ -51,4 +65,41 @@ export const makeShopifyRequest = async (
     console.error("Shopify API request failed:", error);
     throw error;
   }
+};
+
+// Create a cache for API responses
+const apiCache = new Map<string, { data: any, timestamp: number, headers: Headers }>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
+
+// Function that adds caching to API requests
+export const cachedShopifyRequest = async (
+  endpoint: string,
+  method: string = "GET",
+  body?: any,
+  forceRefresh: boolean = false
+): Promise<any> => {
+  // Only cache GET requests
+  if (method !== "GET") {
+    return makeShopifyRequest(endpoint, method, body);
+  }
+  
+  const cacheKey = endpoint;
+  const cachedResponse = apiCache.get(cacheKey);
+  
+  // Return cached response if valid and not forcing refresh
+  if (!forceRefresh && cachedResponse && (Date.now() - cachedResponse.timestamp < CACHE_TTL)) {
+    console.log(`Using cached response for ${endpoint}`);
+    return cachedResponse;
+  }
+  
+  // Make the actual request
+  const response = await makeShopifyRequest(endpoint, method, body);
+  
+  // Cache the response
+  apiCache.set(cacheKey, {
+    ...response,
+    timestamp: Date.now()
+  });
+  
+  return response;
 };

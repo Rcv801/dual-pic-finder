@@ -3,6 +3,8 @@ import { ShopifyProduct } from "@/services/shopify";
 import { SearchBar } from "./SearchBar";
 import { ProductList } from "./ProductList";
 import { PaginationControls } from "./PaginationControls";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertTriangle } from "lucide-react";
 
 interface ExistingProductTabProps {
   products: ShopifyProduct[];
@@ -12,6 +14,7 @@ interface ExistingProductTabProps {
   hasNextPage: boolean;
   searchQuery: string;
   searchInputValue: string;
+  error?: string | null;
   setSelectedProductId: (id: number) => void;
   setSearchInputValue: (value: string) => void;
   handleSearch: (e: React.FormEvent) => void;
@@ -27,6 +30,7 @@ export function ExistingProductTab({
   hasNextPage,
   searchQuery,
   searchInputValue,
+  error,
   setSelectedProductId,
   setSearchInputValue,
   handleSearch,
@@ -41,6 +45,13 @@ export function ExistingProductTab({
         onSearch={handleSearch}
         onClear={clearSearch}
       />
+
+      {error && (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
 
       <ProductList 
         products={products}

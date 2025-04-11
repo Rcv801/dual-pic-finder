@@ -1,7 +1,10 @@
 
 import { toast } from "sonner";
 import { ShopifyProductsResponse } from "./types";
-import { makeShopifyRequest } from "./api";
+import { cachedShopifyRequest } from "./api";
+
+// Cache for pagination cursors to avoid redundant API calls
+const cursorCache = new Map<number, string>();
 
 // Fetch products from Shopify store with pagination
 export const fetchShopifyProducts = async (
@@ -10,6 +13,9 @@ export const fetchShopifyProducts = async (
   searchQuery: string = ""
 ): Promise<ShopifyProductsResponse> => {
   try {
+    // Check if we already have the cursor for this page in cache
+    const cachedCursor = cursorCache.get(page);
+    
     // Build base URL with pagination parameters
     let endpoint = `products.json?limit=${limit}`;
     
@@ -19,26 +25,50 @@ export const fetchShopifyProducts = async (
       endpoint += `&title=${encodeURIComponent(searchQuery)}`;
     }
     
-    // For pagination, we need to use page_info with cursor for subsequent pages
-    // First page doesn't require cursor
+    // For pages beyond first, use cached cursor or fetch previous page
     if (page > 1) {
-      const previousPageResponse = await fetchShopifyProducts(page - 1, limit, searchQuery);
-      if (previousPageResponse.nextPageCursor) {
-        endpoint = `products.json?limit=${limit}&page_info=${previousPageResponse.nextPageCursor}`;
+      if (cachedCursor) {
+        // Use cached cursor
+        endpoint = `products.json?limit=${limit}&page_info=${cachedCursor}`;
         
-        // If search query exists, we need to append it again as page_info can override other params
+        // If search query exists, we need to append it again
         if (searchQuery) {
           endpoint += `&title=${encodeURIComponent(searchQuery)}`;
         }
       } else {
-        // No cursor means no more pages
-        return { products: [], hasNextPage: false, nextPageCursor: "" };
+        // We need cursor from previous page - check if we can get from cache
+        const prevPageCursor = cursorCache.get(page - 1);
+        
+        // If we don't have previous page cursor, we need to fetch it
+        if (!prevPageCursor) {
+          console.log(`No cursor for page ${page-1}. Fetching previous page first...`);
+          const previousPageResponse = await fetchShopifyProducts(page - 1, limit, searchQuery);
+          
+          if (!previousPageResponse.nextPageCursor) {
+            // No cursor means no more pages
+            return { products: [], hasNextPage: false, nextPageCursor: "" };
+          }
+        }
+        
+        // Now we should have the previous page cursor cached
+        const prevPageResult = cursorCache.get(page - 1);
+        if (!prevPageResult) {
+          return { products: [], hasNextPage: false, nextPageCursor: "" };
+        }
+        
+        endpoint = `products.json?limit=${limit}&page_info=${prevPageResult}`;
+        
+        // If search query exists, we need to append it again
+        if (searchQuery) {
+          endpoint += `&title=${encodeURIComponent(searchQuery)}`;
+        }
       }
     }
     
     console.log(`Fetching products from endpoint: ${endpoint}`);
     
-    const { data, headers } = await makeShopifyRequest(endpoint);
+    // Use the cached API request to reduce actual API calls
+    const { data, headers } = await cachedShopifyRequest(endpoint);
     
     // Parse Link header for pagination information
     const linkHeader = headers.get('Link');
@@ -52,7 +82,16 @@ export const fetchShopifyProducts = async (
       const nextLinkMatch = linkHeader.match(/<[^>]*page_info=([^&>]*)[^>]*>;\s*rel="next"/);
       if (nextLinkMatch && nextLinkMatch[1]) {
         nextPageCursor = nextLinkMatch[1];
+        
+        // Cache the cursor for the next page
+        cursorCache.set(page + 1, nextPageCursor);
       }
+    }
+    
+    // Cache pagination cursors from Link header
+    const cursorInfo = extractCursorFromLinkHeader(linkHeader);
+    if (cursorInfo.nextCursor) {
+      cursorCache.set(page + 1, cursorInfo.nextCursor);
     }
     
     return { 
@@ -91,3 +130,7 @@ export const extractCursorFromLinkHeader = (linkHeader: string | null): {
   return result;
 };
 
+// Clear pagination cache - useful when search query changes
+export const clearPaginationCache = (): void => {
+  cursorCache.clear();
+};
