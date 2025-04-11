@@ -31,6 +31,7 @@ const ShopifyUploader = ({ image }: ShopifyUploaderProps) => {
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [isDirectUpload, setIsDirectUpload] = useState(false);
 
   const loadProducts = async () => {
     if (!hasShopifyCredentials()) {
@@ -51,7 +52,9 @@ const ShopifyUploader = ({ image }: ShopifyUploaderProps) => {
       }
     } catch (err) {
       console.error("Error fetching Shopify products:", err);
-      setError("Failed to load products from Shopify. We're using a CORS proxy to access your store, which may sometimes be unreliable.");
+      setError(
+        "Failed to load products from Shopify. Please check your store connection and try again."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -62,18 +65,22 @@ const ShopifyUploader = ({ image }: ShopifyUploaderProps) => {
   }, []);
 
   const handleUpload = async () => {
-    if (!selectedProductId) {
+    if (!selectedProductId && !isDirectUpload) {
       toast.error("Please select a product first");
       return;
     }
 
     setIsUploading(true);
     try {
-      await uploadImageToShopifyProduct(selectedProductId, image.imageUrl, image.title);
+      await uploadImageToShopifyProduct(
+        selectedProductId,
+        image.imageUrl,
+        image.title
+      );
       toast.success("Image uploaded to product successfully");
     } catch (err) {
-      toast.error("Failed to upload image to product");
-      console.error(err);
+      console.error("Failed to upload image:", err);
+      toast.error("Failed to upload image to product. Please try again.");
     } finally {
       setIsUploading(false);
     }
@@ -102,21 +109,32 @@ const ShopifyUploader = ({ image }: ShopifyUploaderProps) => {
             <div className="text-xs text-gray-600 pt-2 space-y-2">
               <p>
                 <strong>Note:</strong> If you continue to see this error, it may be due to CORS 
-                limitations. We're using a CORS proxy (corsproxy.io) to access the Shopify API, but 
+                limitations. We're trying multiple CORS proxies to access the Shopify API, but 
                 these can sometimes be unreliable.
               </p>
               <p>
                 For a more reliable connection, consider using a browser extension that enables CORS:
               </p>
-              <a 
-                href="https://chrome.google.com/webstore/detail/cors-unblock/lfhmikememgdcahcdlaciloancbhjino" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="flex items-center text-blue-600 hover:underline gap-1"
-              >
-                <span>CORS Unblock Extension</span>
-                <ExternalLink className="h-3 w-3" />
-              </a>
+              <div className="space-y-1">
+                <a 
+                  href="https://chrome.google.com/webstore/detail/cors-unblock/lfhmikememgdcahcdlaciloancbhjino" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center text-blue-600 hover:underline gap-1"
+                >
+                  <span>CORS Unblock Extension (Chrome)</span>
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+                <a 
+                  href="https://addons.mozilla.org/en-US/firefox/addon/cors-everywhere/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center text-blue-600 hover:underline gap-1"
+                >
+                  <span>CORS Everywhere (Firefox)</span>
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              </div>
             </div>
           )}
         </div>
