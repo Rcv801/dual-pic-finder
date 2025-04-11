@@ -18,9 +18,10 @@ import { toast } from "sonner";
 interface ConnectDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
+  onConnected?: () => void;
 }
 
-const ConnectDialog = ({ isOpen, onOpenChange }: ConnectDialogProps) => {
+const ConnectDialog = ({ isOpen, onOpenChange, onConnected }: ConnectDialogProps) => {
   const [isConnecting, setIsConnecting] = useState(false);
   const { register, handleSubmit, formState: { errors } } = useForm<ShopifyCredentials>();
 
@@ -51,6 +52,12 @@ const ConnectDialog = ({ isOpen, onOpenChange }: ConnectDialogProps) => {
         // Save credentials
         storeShopifyCredentials(credentials);
         toast.success("Successfully connected to Shopify!");
+        
+        // Call the onConnected callback if provided
+        if (onConnected) {
+          onConnected();
+        }
+        
         onOpenChange(false); // Close the dialog
       } else {
         toast.error("Failed to connect to Shopify. Please check your credentials.");

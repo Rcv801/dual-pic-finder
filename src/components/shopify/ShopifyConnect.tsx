@@ -16,8 +16,13 @@ const ShopifyConnect = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
 
-  useEffect(() => {
+  // Check credentials on initial load and when dialog closes
+  const checkConnection = () => {
     setIsConnected(hasShopifyCredentials());
+  };
+
+  useEffect(() => {
+    checkConnection();
   }, []);
 
   const handleDisconnect = () => {
@@ -56,7 +61,8 @@ const ShopifyConnect = () => {
 
       <ConnectDialog 
         isOpen={isDialogOpen} 
-        onOpenChange={setIsDialogOpen} 
+        onOpenChange={setIsDialogOpen}
+        onConnected={checkConnection}
       />
     </>
   );
