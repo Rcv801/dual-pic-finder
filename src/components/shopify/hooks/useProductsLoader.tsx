@@ -2,6 +2,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { ShopifyProduct, ShopifyProductsResponse } from "@/services/shopify/types";
 import { fetchShopifyProducts, clearPaginationCache } from "@/services/shopify/products";
+import { clearApiCache } from "@/services/shopify/api";
 import { toast } from "sonner";
 
 export function useProductsLoader() {
@@ -14,10 +15,12 @@ export function useProductsLoader() {
   const [searchInputValue, setSearchInputValue] = useState("");
   const [totalProducts, setTotalProducts] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [lastLoadParams, setLastLoadParams] = useState<{page: number, query: string} | null>(null);
 
   const loadProducts = useCallback(async (page: number, query: string) => {
     setIsLoadingProducts(true);
     setError(null);
+    setLastLoadParams({page, query});
     
     try {
       console.log(`Loading products for page ${page}, query: ${query}`);
@@ -58,6 +61,19 @@ export function useProductsLoader() {
       setIsLoadingProducts(false);
     }
   }, [selectedProductId]);
+
+  // Retry function when API call fails
+  const retryLoading = useCallback(() => {
+    if (lastLoadParams) {
+      // Clear caches to force a fresh fetch
+      clearPaginationCache();
+      clearApiCache();
+      
+      // Retry with the last params
+      loadProducts(lastLoadParams.page, lastLoadParams.query);
+      toast.info("Retrying product load...");
+    }
+  }, [lastLoadParams, loadProducts]);
 
   // Initial load of products
   useEffect(() => {
@@ -107,6 +123,7 @@ export function useProductsLoader() {
     setSearchInputValue,
     handleSearch,
     clearSearch,
-    goToPage
+    goToPage,
+    retryLoading
   };
 }

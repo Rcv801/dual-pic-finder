@@ -40,9 +40,15 @@ export const makeShopifyRequest = async (
     
     if (response.status === 429) {
       // Rate limit exceeded - implement exponential backoff
-      if (retryCount < 3) {
+      if (retryCount < 5) { // Increase max retries to 5
         const backoffTime = Math.pow(2, retryCount) * 1000; // Exponential backoff
         console.log(`Rate limited. Retrying in ${backoffTime}ms...`);
+        
+        // Show toast for first retry only to avoid spam
+        if (retryCount === 0) {
+          toast.info(`Shopify API rate limited. Retrying in ${backoffTime/1000}s...`);
+        }
+        
         await new Promise(resolve => setTimeout(resolve, backoffTime));
         return makeShopifyRequest(endpoint, method, body, retryCount + 1);
       } else {
@@ -69,7 +75,7 @@ export const makeShopifyRequest = async (
 
 // Create a cache for API responses
 const apiCache = new Map<string, { data: any, timestamp: number, headers: Headers }>();
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
+const CACHE_TTL = 10 * 60 * 1000; // Increase cache time to 10 minutes
 
 // Function that adds caching to API requests
 export const cachedShopifyRequest = async (
@@ -102,4 +108,13 @@ export const cachedShopifyRequest = async (
   });
   
   return response;
+};
+
+// Clear the entire cache or a specific endpoint
+export const clearApiCache = (endpoint?: string) => {
+  if (endpoint) {
+    apiCache.delete(endpoint);
+  } else {
+    apiCache.clear();
+  }
 };

@@ -31,11 +31,13 @@ const ShopifyUploader = ({ image }: ShopifyUploaderProps) => {
     hasNextPage,
     searchQuery,
     searchInputValue,
+    error,
     setSelectedProductId,
     setSearchInputValue,
     handleSearch,
     clearSearch,
-    goToPage
+    goToPage,
+    retryLoading
   } = useProductsLoader();
 
   const handleUploadToNew = async () => {
@@ -103,11 +105,13 @@ const ShopifyUploader = ({ image }: ShopifyUploaderProps) => {
             hasNextPage={hasNextPage}
             searchQuery={searchQuery}
             searchInputValue={searchInputValue}
+            error={error}
             setSelectedProductId={setSelectedProductId}
             setSearchInputValue={setSearchInputValue}
             handleSearch={handleSearch}
             clearSearch={clearSearch}
             goToPage={goToPage}
+            retryLoading={retryLoading}
           />
         </TabsContent>
         

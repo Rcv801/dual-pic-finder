@@ -4,7 +4,8 @@ import { SearchBar } from "./SearchBar";
 import { ProductList } from "./ProductList";
 import { PaginationControls } from "./PaginationControls";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, RefreshCcw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface ExistingProductTabProps {
   products: ShopifyProduct[];
@@ -20,6 +21,7 @@ interface ExistingProductTabProps {
   handleSearch: (e: React.FormEvent) => void;
   clearSearch: () => void;
   goToPage: (page: number) => void;
+  retryLoading?: () => void;
 }
 
 export function ExistingProductTab({
@@ -35,7 +37,8 @@ export function ExistingProductTab({
   setSearchInputValue,
   handleSearch,
   clearSearch,
-  goToPage
+  goToPage,
+  retryLoading
 }: ExistingProductTabProps) {
   return (
     <div className="space-y-4">
@@ -49,7 +52,20 @@ export function ExistingProductTab({
       {error && (
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription className="flex items-center justify-between">
+            <span>{error}</span>
+            {retryLoading && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={retryLoading}
+                className="ml-2"
+              >
+                <RefreshCcw className="h-3 w-3 mr-2" />
+                Retry
+              </Button>
+            )}
+          </AlertDescription>
         </Alert>
       )}
 
