@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { ImageResult } from "@/services/searchService";
@@ -45,32 +46,46 @@ const ShopifyUploader = ({ image }: ShopifyUploaderProps) => {
   const loadProducts = useCallback(async (page: number, query: string) => {
     setIsLoadingProducts(true);
     try {
+      console.log(`Loading products for page ${page}, query: ${query}`);
       const response: ShopifyProductsResponse = await fetchShopifyProducts(page, 50, query);
-      setProducts(response.products);
-      setHasNextPage(response.hasNextPage);
       
-      if (response.products.length > 0 && selectedProductId === null) {
-        setSelectedProductId(response.products[0].id);
-      }
-      
-      setTotalProducts(prev => {
-        if (page === 1) {
-          return response.products.length * (response.hasNextPage ? 2 : 1);
+      if (response.products.length > 0) {
+        setProducts(response.products);
+        setHasNextPage(response.hasNextPage);
+        
+        // Set first product as selected if none is selected yet
+        if (selectedProductId === null) {
+          setSelectedProductId(response.products[0].id);
         }
-        return prev;
-      });
+        
+        setTotalProducts(prev => {
+          if (page === 1) {
+            return response.products.length * (response.hasNextPage ? 2 : 1);
+          }
+          return prev;
+        });
+      } else if (query) {
+        // Clear products for search with no results
+        setProducts([]);
+        setHasNextPage(false);
+      }
     } catch (error) {
       console.error("Error loading products:", error);
+      // Show empty state on error
+      setProducts([]);
+      setHasNextPage(false);
     } finally {
       setIsLoadingProducts(false);
     }
   }, [selectedProductId]);
 
   useEffect(() => {
+    // Initial load of products
     loadProducts(1, "");
   }, []);
 
   useEffect(() => {
+    // Load products when page or search query changes
     loadProducts(currentPage, searchQuery);
   }, [currentPage, searchQuery, loadProducts]);
 
@@ -123,13 +138,13 @@ const ShopifyUploader = ({ image }: ShopifyUploaderProps) => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setSearchQuery(searchInputValue);
-    setCurrentPage(1);
+    setCurrentPage(1); // Reset to first page when search changes
   };
 
   const clearSearch = () => {
     setSearchInputValue("");
     setSearchQuery("");
-    setCurrentPage(1);
+    setCurrentPage(1); // Reset to first page when search is cleared
   };
 
   const goToPage = (page: number) => {
@@ -240,7 +255,7 @@ const ShopifyUploader = ({ image }: ShopifyUploaderProps) => {
               </Pagination>
               
               <p className="text-sm text-gray-500">
-                {searchQuery ? `Showing results for "${searchQuery}"` : "The image will be added to the selected product."}
+                {searchQuery ? `Showing results for "${searchQuery}"` : `Page ${currentPage} - The image will be added to the selected product.`}
               </p>
             </>
           )}

@@ -1,3 +1,4 @@
+
 import { toast } from "sonner";
 
 // Updated types for Shopify credentials using Direct Token Authentication
@@ -17,7 +18,7 @@ export interface ShopifyProduct {
 export interface ShopifyProductsResponse {
   products: ShopifyProduct[];
   hasNextPage: boolean;
-  nextPageUrl?: string;
+  nextPageCursor?: string;
 }
 
 // Check if we have stored Shopify credentials
@@ -108,19 +109,23 @@ export const fetchShopifyProducts = async (
   const { shopDomain, accessToken } = credentials;
   
   try {
-    // Build URL with pagination parameters
+    // Build base URL with pagination parameters
     let url = `https://${shopDomain}/admin/api/2025-04/products.json?limit=${limit}`;
     
-    // Add page info based on page number
-    if (page > 1) {
-      url += `&page=${page}`;
-    }
-    
-    // Add title search if query provided
+    // Add search query if provided
     if (searchQuery) {
-      // Use title:*query* filter for search
+      // Use query parameter for search (title contains the search term)
       url += `&title=${encodeURIComponent(searchQuery)}`;
     }
+    
+    // Handle pagination properly
+    if (page > 1) {
+      // For page 2 and beyond, we need to calculate the offset
+      const offset = (page - 1) * limit;
+      url += `&page_info=${offset}`;
+    }
+    
+    console.log("Fetching products from URL:", url);
     
     // Use CORS proxy to avoid CORS issues
     const corsProxy = "https://cors-anywhere.herokuapp.com/";
@@ -138,19 +143,33 @@ export const fetchShopifyProducts = async (
     );
     
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`API Error (${response.status}):`, errorText);
       throw new Error(`Failed to fetch products: ${response.status}`);
     }
     
     const data = await response.json();
     console.log("Products fetched successfully:", data);
     
-    // Check if we have more pages
+    // Check if we have more pages by examining the Link header
     const linkHeader = response.headers.get('Link');
+    console.log("Link header:", linkHeader);
+    
     const hasNextPage = linkHeader ? linkHeader.includes('rel="next"') : false;
+    let nextPageCursor = "";
+    
+    if (hasNextPage && linkHeader) {
+      // Extract the cursor from the Link header
+      const nextLinkMatch = linkHeader.match(/<[^>]*page_info=([^&>]*)[^>]*>;\s*rel="next"/);
+      if (nextLinkMatch && nextLinkMatch[1]) {
+        nextPageCursor = nextLinkMatch[1];
+      }
+    }
     
     return { 
       products: data.products || [],
-      hasNextPage
+      hasNextPage,
+      nextPageCursor
     };
   } catch (error) {
     console.error("Failed to fetch Shopify products:", error);
