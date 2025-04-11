@@ -16,16 +16,24 @@ const TroubleshootingGuide = ({ visible }: TroubleshootingGuideProps) => {
         <ol className="list-decimal ml-4 space-y-1">
           <li>Verify that your store domain is correct (e.g., yourstore.myshopify.com)</li>
           <li>Ensure your API token has the necessary permissions (read_products, write_products)</li>
-          <li>Shopify blocks many CORS proxies - try installing a CORS-disabling browser extension for development use only</li>
+          <li>Make sure you're using an Admin API token from a custom app, not a storefront token</li>
+          <li>Shopify API has strict CORS policies that block most external requests</li>
         </ol>
+        <div className="mt-2">
+          <p><strong>Recommended solutions:</strong></p>
+          <ul className="list-disc ml-4 space-y-1">
+            <li>Try the "Try /shop.json endpoint" button below to test a simpler API endpoint</li>
+            <li>Install a CORS-disabling browser extension (for development only)</li>
+          </ul>
+        </div>
         <div className="mt-2 space-y-1">
           <a 
-            href="https://chrome.google.com/webstore/detail/allow-cors-access-control/lhobafahddgcelffkeicbaginigeejlf" 
+            href="https://chrome.google.com/webstore/detail/cors-unblock/lfhmikememgdcahcdlaciloancbhjino" 
             target="_blank" 
             rel="noopener noreferrer"
             className="flex items-center text-blue-600 hover:underline gap-1"
           >
-            <span>Allow CORS Extension (Chrome)</span>
+            <span>CORS Unblock Extension (Chrome)</span>
             <ExternalLink className="h-3 w-3" />
           </a>
           <a 

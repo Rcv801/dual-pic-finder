@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Store, Loader2, RefreshCw } from "lucide-react";
+import { Store, Loader2, RefreshCw, ShieldCheck } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -10,7 +10,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { saveShopifyCredentials, validateShopifyCredentials } from "@/services/shopify";
+import { saveShopifyCredentials, validateShopifyCredentials, testShopConnection } from "@/services/shopify";
 import { toast } from "sonner";
 import FormField from "./FormField";
 import ConnectionError from "./ConnectionError";
@@ -27,6 +27,7 @@ const ConnectDialog = ({ onConnect }: ConnectDialogProps) => {
   const [accessToken, setAccessToken] = useState("");
   const [open, setOpen] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
+  const [isTestingShopEndpoint, setIsTestingShopEndpoint] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [connectionAttempts, setConnectionAttempts] = useState(0);
 
@@ -40,6 +41,40 @@ const ConnectDialog = ({ onConnect }: ConnectDialogProps) => {
     }
     
     return cleaned;
+  };
+
+  const handleTestShopEndpoint = async () => {
+    if (!storeDomain.trim() || !accessToken.trim()) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+    
+    setIsTestingShopEndpoint(true);
+    setConnectionError(null);
+    
+    try {
+      const cleanedDomain = cleanDomain(storeDomain);
+      const credentials = { 
+        storeDomain: cleanedDomain, 
+        accessToken: accessToken.trim() 
+      };
+      
+      const isConnected = await testShopConnection(credentials);
+      
+      if (isConnected) {
+        toast.success("Successfully connected to shop.json endpoint!");
+        setConnectionError(null);
+      } else {
+        setConnectionError("Could not connect to shop.json endpoint. Check your credentials and try again.");
+        toast.error("Failed to connect to shop.json endpoint.");
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      setConnectionError(`Failed to connect to shop.json endpoint: ${errorMessage}`);
+      toast.error("Failed to connect to shop.json endpoint. Check your credentials and try again.");
+    } finally {
+      setIsTestingShopEndpoint(false);
+    }
   };
 
   const handleConnect = async () => {
@@ -112,7 +147,7 @@ const ConnectDialog = ({ onConnect }: ConnectDialogProps) => {
             value={storeDomain}
             onChange={setStoreDomain}
             placeholder="yourstore.myshopify.com"
-            disabled={isValidating}
+            disabled={isValidating || isTestingShopEndpoint}
             helpText={<DomainHelpText />}
           />
           
@@ -122,7 +157,7 @@ const ConnectDialog = ({ onConnect }: ConnectDialogProps) => {
             value={accessToken}
             onChange={setAccessToken}
             placeholder="shpat_xxxx..."
-            disabled={isValidating}
+            disabled={isValidating || isTestingShopEndpoint}
             isPassword={true}
             helpText={<TokenHelpText />}
           />
@@ -132,9 +167,32 @@ const ConnectDialog = ({ onConnect }: ConnectDialogProps) => {
           <div className="text-xs text-amber-600">
             <p>Note: Your credentials are stored locally in your browser.</p>
           </div>
+
+          {connectionAttempts > 0 && (
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="sm" 
+              onClick={handleTestShopEndpoint}
+              disabled={isValidating || isTestingShopEndpoint || !storeDomain || !accessToken}
+              className="w-full gap-2"
+            >
+              {isTestingShopEndpoint ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Testing...
+                </>
+              ) : (
+                <>
+                  <ShieldCheck className="h-4 w-4" />
+                  Try /shop.json endpoint
+                </>
+              )}
+            </Button>
+          )}
         </div>
         <div className="flex justify-end">
-          <Button onClick={handleConnect} disabled={isValidating}>
+          <Button onClick={handleConnect} disabled={isValidating || isTestingShopEndpoint}>
             {isValidating ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />

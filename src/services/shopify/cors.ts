@@ -1,11 +1,11 @@
 
 // Available CORS proxies to try (in order of preference)
 export const CORS_PROXIES = [
-  'https://corsproxy.io/?',
-  'https://cors-anywhere.herokuapp.com/',
+  'direct', // Try direct connection first
   'https://api.allorigins.win/raw?url=',
-  'https://thingproxy.freeboard.io/fetch/',  // Add another proxy option
-  'direct' // Direct connection option (no proxy)
+  'https://corsproxy.io/?',
+  'https://thingproxy.freeboard.io/fetch/',
+  'https://cors-anywhere.herokuapp.com/',  // This one often requires authorization
 ];
 
 // Track which proxy is currently working
@@ -16,8 +16,8 @@ export const getProxiedUrl = (endpoint: string, storeDomain: string): string => 
   // Ensure we're working with just the domain, no protocol
   const cleanDomain = storeDomain.replace(/^https?:\/\//i, '');
   
-  // Build the Shopify API URL
-  const shopifyApiUrl = `https://${cleanDomain}/admin/api/2023-07/${endpoint}`;
+  // Build the Shopify API URL - using 2023-10 version as mentioned by user
+  const shopifyApiUrl = `https://${cleanDomain}/admin/api/2023-10/${endpoint}`;
   
   // Use the current proxy
   const corsProxy = CORS_PROXIES[currentProxyIndex];

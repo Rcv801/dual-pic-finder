@@ -101,3 +101,18 @@ export const makeShopifyApiRequest = async <T>(options: ApiRequestOptions): Prom
   console.error(detailedError);
   throw new Error(`All connection methods failed. Last error: ${lastError?.message || 'Unknown error'}`);
 };
+
+// Test connection using /shop.json endpoint which is simpler than products
+export const testShopConnection = async (credentials: { storeDomain: string, accessToken: string }): Promise<boolean> => {
+  try {
+    await makeShopifyApiRequest({
+      endpoint: 'shop.json',
+      customDomain: credentials.storeDomain,
+      customToken: credentials.accessToken
+    });
+    return true;
+  } catch (error) {
+    console.error('Shop connection test failed:', error);
+    return false;
+  }
+};
