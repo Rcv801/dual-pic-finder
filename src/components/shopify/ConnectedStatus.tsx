@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { ShoppingBag, LogOut } from "lucide-react";
+import { ShoppingBag, XCircle } from "lucide-react";
 import { clearShopifyCredentials, getShopifyCredentials } from "@/services/shopifyService";
 import { toast } from "sonner";
 
@@ -23,8 +23,15 @@ const ConnectedStatus = ({ onDisconnect }: ConnectedStatusProps) => {
         <ShoppingBag className="h-4 w-4" />
         Connected to {credentials?.storeName}.myshopify.com
       </span>
-      <Button variant="ghost" size="sm" onClick={handleDisconnect}>
-        <LogOut className="h-4 w-4" />
+      <Button 
+        variant="ghost" 
+        size="sm" 
+        onClick={handleDisconnect}
+        className="text-red-500 hover:text-red-700 hover:bg-red-100 gap-1"
+        title="Disconnect from Shopify"
+      >
+        <XCircle className="h-4 w-4" />
+        Disconnect
       </Button>
     </div>
   );
