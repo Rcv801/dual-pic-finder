@@ -8,12 +8,9 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ImageResult } from "@/services/searchService";
-import { Download, ExternalLink, Share2, ShoppingBag } from "lucide-react";
+import { Download, ExternalLink, Share2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { hasShopifyCredentials } from "@/services/shopify";
-import ShopifyUploader from "./ShopifyUploader";
 
 interface ImageDetailModalProps {
   image: ImageResult | null;
@@ -24,8 +21,6 @@ interface ImageDetailModalProps {
 
 const ImageDetailModal = ({ image, isOpen, onClose, onDownload }: ImageDetailModalProps) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState("preview");
-  const shopifyConnected = hasShopifyCredentials();
 
   const handleDownload = () => {
     if (image) {
@@ -63,35 +58,17 @@ const ImageDetailModal = ({ image, isOpen, onClose, onDownload }: ImageDetailMod
           </DialogDescription>
         </DialogHeader>
         
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-grow flex flex-col overflow-hidden">
-          <TabsList className="mb-2">
-            <TabsTrigger value="preview">Preview</TabsTrigger>
-            {shopifyConnected && (
-              <TabsTrigger value="shopify" className="gap-1">
-                <ShoppingBag className="h-3.5 w-3.5" />
-                Shopify
-              </TabsTrigger>
-            )}
-          </TabsList>
-          
-          <TabsContent value="preview" className="flex-grow overflow-auto relative m-0">
-            <img
-              src={image.imageUrl}
-              alt={image.title}
-              className="object-contain max-h-full w-auto mx-auto"
-              onError={(e) => {
-                e.currentTarget.src = 'https://images.unsplash.com/photo-1599669454699-248893623440?q=80&w=2070&auto=format&fit=crop';
-                e.currentTarget.alt = 'Image failed to load';
-              }}
-            />
-          </TabsContent>
-          
-          {shopifyConnected && (
-            <TabsContent value="shopify" className="m-0 p-4 flex-grow overflow-auto">
-              <ShopifyUploader image={image} />
-            </TabsContent>
-          )}
-        </Tabs>
+        <div className="flex-grow overflow-auto relative">
+          <img
+            src={image.imageUrl}
+            alt={image.title}
+            className="object-contain max-h-full w-auto mx-auto"
+            onError={(e) => {
+              e.currentTarget.src = 'https://images.unsplash.com/photo-1599669454699-248893623440?q=80&w=2070&auto=format&fit=crop';
+              e.currentTarget.alt = 'Image failed to load';
+            }}
+          />
+        </div>
         
         <div className="flex justify-end space-x-2 mt-4">
           <Button
