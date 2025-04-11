@@ -49,23 +49,28 @@ export const fetchShopifyProducts = async (): Promise<ShopifyProduct[]> => {
   const { storeName, accessToken } = credentials;
   
   try {
-    const response = await fetch(
-      `https://${storeName}.myshopify.com/admin/api/2023-07/products.json`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Shopify-Access-Token': accessToken
-        }
+    // Use CORS proxy if needed in development environment
+    const apiUrl = `https://${storeName}.myshopify.com/admin/api/2023-07/products.json`;
+    
+    console.log(`Fetching products from: ${apiUrl}`);
+    
+    const response = await fetch(apiUrl, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Shopify-Access-Token': accessToken
       }
-    );
+    });
 
     if (!response.ok) {
-      throw new Error(`Shopify API error: ${response.statusText}`);
+      const errorText = await response.text();
+      console.error('Shopify API error response:', errorText);
+      throw new Error(`Shopify API error: ${response.status} ${response.statusText}`);
     }
 
     const data = await response.json();
-    return data.products;
+    console.log(`Successfully fetched ${data.products?.length || 0} products`);
+    return data.products || [];
   } catch (error) {
     console.error('Error fetching Shopify products:', error);
     throw error;
@@ -104,9 +109,13 @@ export const uploadImageToShopifyProduct = async (
     );
 
     if (!response.ok) {
-      throw new Error(`Failed to upload image: ${response.statusText}`);
+      const errorText = await response.text();
+      console.error('Shopify API upload error:', errorText);
+      throw new Error(`Failed to upload image: ${response.status} ${response.statusText}`);
     }
 
+    const data = await response.json();
+    console.log('Image uploaded successfully:', data);
     return true;
   } catch (error) {
     console.error('Error uploading image to Shopify:', error);

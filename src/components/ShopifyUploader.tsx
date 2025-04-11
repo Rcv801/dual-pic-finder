@@ -9,9 +9,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Upload, AlertCircle } from "lucide-react";
+import { Loader2, Upload, AlertCircle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
-import { fetchShopifyProducts, uploadImageToShopifyProduct } from "@/services/shopifyService";
+import { fetchShopifyProducts, uploadImageToShopifyProduct, hasShopifyCredentials } from "@/services/shopifyService";
 
 interface ShopifyProduct {
   id: string;
@@ -31,21 +31,26 @@ const ShopifyUploader = ({ image }: ShopifyUploaderProps) => {
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const loadProducts = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const shopifyProducts = await fetchShopifyProducts();
-        setProducts(shopifyProducts);
-      } catch (err) {
-        setError("Failed to load products from Shopify");
-        console.error(err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const loadProducts = async () => {
+    if (!hasShopifyCredentials()) {
+      setError("No Shopify credentials found. Please reconnect your store.");
+      return;
+    }
+    
+    setIsLoading(true);
+    setError(null);
+    try {
+      const shopifyProducts = await fetchShopifyProducts();
+      setProducts(shopifyProducts);
+    } catch (err) {
+      console.error("Error fetching Shopify products:", err);
+      setError("Failed to load products from Shopify. Please check your store connection and try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     loadProducts();
   }, []);
 
@@ -70,10 +75,19 @@ const ShopifyUploader = ({ image }: ShopifyUploaderProps) => {
   if (error) {
     return (
       <div className="p-4 border border-amber-200 bg-amber-50 rounded-md">
-        <div className="flex items-center text-amber-700 gap-2">
+        <div className="flex items-center text-amber-700 gap-2 mb-4">
           <AlertCircle className="h-4 w-4" />
           <span>{error}</span>
         </div>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={loadProducts}
+          className="w-full flex items-center justify-center gap-2"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Retry Connection
+        </Button>
       </div>
     );
   }
