@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Upload, AlertCircle, RefreshCw } from "lucide-react";
+import { Loader2, Upload, AlertCircle, RefreshCw, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { fetchShopifyProducts, uploadImageToShopifyProduct, hasShopifyCredentials } from "@/services/shopifyService";
 
@@ -30,6 +30,7 @@ const ShopifyUploader = ({ image }: ShopifyUploaderProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   const loadProducts = async () => {
     if (!hasShopifyCredentials()) {
@@ -39,12 +40,18 @@ const ShopifyUploader = ({ image }: ShopifyUploaderProps) => {
     
     setIsLoading(true);
     setError(null);
+    setRetryCount(prev => prev + 1);
+    
     try {
       const shopifyProducts = await fetchShopifyProducts();
       setProducts(shopifyProducts);
+      
+      if (shopifyProducts.length === 0) {
+        setError("No products found in your Shopify store. Please add products to your store first.");
+      }
     } catch (err) {
       console.error("Error fetching Shopify products:", err);
-      setError("Failed to load products from Shopify. Please check your store connection and try again.");
+      setError("Failed to load products from Shopify. We're using a CORS proxy to access your store, which may sometimes be unreliable.");
     } finally {
       setIsLoading(false);
     }
@@ -79,15 +86,40 @@ const ShopifyUploader = ({ image }: ShopifyUploaderProps) => {
           <AlertCircle className="h-4 w-4" />
           <span>{error}</span>
         </div>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={loadProducts}
-          className="w-full flex items-center justify-center gap-2"
-        >
-          <RefreshCw className="h-4 w-4" />
-          Retry Connection
-        </Button>
+        
+        <div className="space-y-3">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={loadProducts}
+            className="w-full flex items-center justify-center gap-2"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Retry Connection
+          </Button>
+          
+          {retryCount > 1 && (
+            <div className="text-xs text-gray-600 pt-2 space-y-2">
+              <p>
+                <strong>Note:</strong> If you continue to see this error, it may be due to CORS 
+                limitations. We're using a CORS proxy (corsproxy.io) to access the Shopify API, but 
+                these can sometimes be unreliable.
+              </p>
+              <p>
+                For a more reliable connection, consider using a browser extension that enables CORS:
+              </p>
+              <a 
+                href="https://chrome.google.com/webstore/detail/cors-unblock/lfhmikememgdcahcdlaciloancbhjino" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center text-blue-600 hover:underline gap-1"
+              >
+                <span>CORS Unblock Extension</span>
+                <ExternalLink className="h-3 w-3" />
+              </a>
+            </div>
+          )}
+        </div>
       </div>
     );
   }

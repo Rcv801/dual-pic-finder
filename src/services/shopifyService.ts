@@ -39,6 +39,14 @@ export const hasShopifyCredentials = (): boolean => {
   return !!getShopifyCredentials();
 };
 
+// Helper function to construct API URLs with CORS proxy
+const getProxiedUrl = (endpoint: string, storeName: string): string => {
+  // Using a free CORS proxy service - consider setting up your own for production
+  const corsProxy = 'https://corsproxy.io/?';
+  const shopifyApiUrl = `https://${storeName}.myshopify.com/admin/api/2023-07/${endpoint}`;
+  return `${corsProxy}${encodeURIComponent(shopifyApiUrl)}`;
+};
+
 // Fetch products from Shopify
 export const fetchShopifyProducts = async (): Promise<ShopifyProduct[]> => {
   const credentials = getShopifyCredentials();
@@ -49,8 +57,7 @@ export const fetchShopifyProducts = async (): Promise<ShopifyProduct[]> => {
   const { storeName, accessToken } = credentials;
   
   try {
-    // Use CORS proxy if needed in development environment
-    const apiUrl = `https://${storeName}.myshopify.com/admin/api/2023-07/products.json`;
+    const apiUrl = getProxiedUrl('products.json', storeName);
     
     console.log(`Fetching products from: ${apiUrl}`);
     
@@ -91,22 +98,21 @@ export const uploadImageToShopifyProduct = async (
   const { storeName, accessToken } = credentials;
   
   try {
-    const response = await fetch(
-      `https://${storeName}.myshopify.com/admin/api/2023-07/products/${productId}/images.json`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Shopify-Access-Token': accessToken
-        },
-        body: JSON.stringify({
-          image: {
-            src: imageUrl,
-            alt: imageAlt
-          }
-        })
-      }
-    );
+    const apiUrl = getProxiedUrl(`products/${productId}/images.json`, storeName);
+    
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Shopify-Access-Token': accessToken
+      },
+      body: JSON.stringify({
+        image: {
+          src: imageUrl,
+          alt: imageAlt
+        }
+      })
+    });
 
     if (!response.ok) {
       const errorText = await response.text();
