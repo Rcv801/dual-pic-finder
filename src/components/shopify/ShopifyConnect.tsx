@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ShoppingBag } from "lucide-react";
 import ConnectDialog from "./ConnectDialog";
-import { hasShopifyCredentials, clearShopifyCredentials } from "@/services/shopifyService";
+import { hasShopifyCredentials, clearShopifyCredentials } from "@/services/shopify";
 import {
   DropdownMenu,
   DropdownMenuContent,

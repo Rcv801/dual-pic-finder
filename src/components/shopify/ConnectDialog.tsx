@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ShopifyCredentials, storeShopifyCredentials, testShopifyConnection } from "@/services/shopifyService";
+import { ShopifyCredentials, storeShopifyCredentials, testShopifyConnection } from "@/services/shopify";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";

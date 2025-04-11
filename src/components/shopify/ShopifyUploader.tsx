@@ -8,7 +8,7 @@ import {
   addImageToExistingProduct, 
   fetchShopifyProducts,
   uploadImageToShopify 
-} from "@/services/shopifyService";
+} from "@/services/shopify";
 import { Upload, PlusCircle, Loader2, Search, X } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
