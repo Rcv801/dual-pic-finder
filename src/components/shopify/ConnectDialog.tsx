@@ -179,7 +179,7 @@ const ConnectDialog = ({ onConnect }: ConnectDialogProps) => {
           </div>
           
           {connectionAttempts > 0 && (
-            <Alert variant="warning" className="bg-amber-50 border-amber-200">
+            <Alert variant="default" className="bg-amber-50 border-amber-200">
               <div className="text-xs text-amber-700 space-y-2">
                 <p><strong>Connection troubleshooting:</strong></p>
                 <ol className="list-decimal ml-4 space-y-1">
