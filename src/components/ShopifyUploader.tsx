@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ImageResult } from "@/services/searchService";
@@ -11,14 +10,12 @@ import {
 } from "@/components/ui/select";
 import { Loader2, Upload, AlertCircle, RefreshCw, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
-import { fetchShopifyProducts, uploadImageToShopifyProduct, hasShopifyCredentials } from "@/services/shopifyService";
-
-interface ShopifyProduct {
-  id: string;
-  title: string;
-  images: { id: string; src: string }[];
-  image?: { id: string; src: string };
-}
+import { 
+  fetchShopifyProducts, 
+  uploadImageToShopifyProduct, 
+  hasShopifyCredentials,
+  ShopifyProduct 
+} from "@/services/shopify";
 
 interface ShopifyUploaderProps {
   image: ImageResult;

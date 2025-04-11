@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { ShoppingBag, XCircle } from "lucide-react";
-import { clearShopifyCredentials, getShopifyCredentials } from "@/services/shopifyService";
+import { clearShopifyCredentials, getShopifyCredentials } from "@/services/shopify";
 import { toast } from "sonner";
 
 interface ConnectedStatusProps {

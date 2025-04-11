@@ -12,7 +12,7 @@ import { Download, ExternalLink, Share2, ShoppingBag } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { hasShopifyCredentials } from "@/services/shopifyService";
+import { hasShopifyCredentials } from "@/services/shopify";
 import ShopifyUploader from "./ShopifyUploader";
 
 interface ImageDetailModalProps {

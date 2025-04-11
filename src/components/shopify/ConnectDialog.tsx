@@ -12,7 +12,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { saveShopifyCredentials, validateShopifyCredentials } from "@/services/shopifyService";
+import { saveShopifyCredentials, validateShopifyCredentials } from "@/services/shopify";
 import { toast } from "sonner";
 
 interface ConnectDialogProps {

@@ -1,6 +1,5 @@
-
 import { useState } from "react";
-import { hasShopifyCredentials } from "@/services/shopifyService";
+import { hasShopifyCredentials } from "@/services/shopify";
 import ConnectDialog from "./ConnectDialog";
 import ConnectedStatus from "./ConnectedStatus";
 
