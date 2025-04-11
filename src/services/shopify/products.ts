@@ -19,18 +19,28 @@ export const fetchShopifyProducts = async (
       endpoint += `&title=${encodeURIComponent(searchQuery)}`;
     }
     
-    // Handle pagination properly
+    // For pagination, we need to use page_info with cursor for subsequent pages
+    // First page doesn't require cursor
     if (page > 1) {
-      // For page 2 and beyond, we need to calculate the offset
-      const offset = (page - 1) * limit;
-      endpoint += `&page_info=${offset}`;
+      const previousPageResponse = await fetchShopifyProducts(page - 1, limit, searchQuery);
+      if (previousPageResponse.nextPageCursor) {
+        endpoint = `products.json?limit=${limit}&page_info=${previousPageResponse.nextPageCursor}`;
+        
+        // If search query exists, we need to append it again as page_info can override other params
+        if (searchQuery) {
+          endpoint += `&title=${encodeURIComponent(searchQuery)}`;
+        }
+      } else {
+        // No cursor means no more pages
+        return { products: [], hasNextPage: false, nextPageCursor: "" };
+      }
     }
     
-    console.log("Fetching products from endpoint:", endpoint);
+    console.log(`Fetching products from endpoint: ${endpoint}`);
     
     const { data, headers } = await makeShopifyRequest(endpoint);
     
-    // Check if we have more pages by examining the Link header
+    // Parse Link header for pagination information
     const linkHeader = headers.get('Link');
     console.log("Link header:", linkHeader);
     
@@ -53,6 +63,31 @@ export const fetchShopifyProducts = async (
   } catch (error) {
     console.error("Failed to fetch Shopify products:", error);
     toast.error("Failed to fetch products from Shopify");
-    return { products: [], hasNextPage: false };
+    return { products: [], hasNextPage: false, nextPageCursor: "" };
   }
 };
+
+// Helper function to extract page cursor from Link header
+export const extractCursorFromLinkHeader = (linkHeader: string | null): { 
+  nextCursor: string, 
+  prevCursor: string 
+} => {
+  const result = { nextCursor: "", prevCursor: "" };
+  
+  if (!linkHeader) return result;
+  
+  // Extract next cursor
+  const nextLinkMatch = linkHeader.match(/<[^>]*page_info=([^&>]*)[^>]*>;\s*rel="next"/);
+  if (nextLinkMatch && nextLinkMatch[1]) {
+    result.nextCursor = nextLinkMatch[1];
+  }
+  
+  // Extract previous cursor
+  const prevLinkMatch = linkHeader.match(/<[^>]*page_info=([^&>]*)[^>]*>;\s*rel="previous"/);
+  if (prevLinkMatch && prevLinkMatch[1]) {
+    result.prevCursor = prevLinkMatch[1];
+  }
+  
+  return result;
+};
+
