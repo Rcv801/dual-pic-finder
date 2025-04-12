@@ -1,3 +1,4 @@
+
 import { toast } from "sonner";
 import { ShopifyProductsResponse } from "./types";
 import { cachedShopifyRequest } from "./api";
@@ -17,9 +18,6 @@ export const fetchShopifyProducts = async (
       clearPaginationCache();
     }
     
-    // Check if we already have the cursor for this page in cache
-    const cachedCursor = cursorCache.get(page);
-    
     // Build base URL with pagination parameters
     let endpoint = `products.json?limit=${limit}`;
     
@@ -35,22 +33,22 @@ export const fetchShopifyProducts = async (
     }
     
     // For pages beyond first, use cached cursor for pagination
-    // Use cursor-based pagination for both regular and search queries
     if (page > 1) {
+      const cachedCursor = cursorCache.get(page);
+      
       if (cachedCursor) {
         // Use cached cursor
         endpoint = `products.json?limit=${limit}&page_info=${cachedCursor}`;
         
-        // Append search query if provided
+        // When using cursor-based pagination, we still need to add the search query
         if (searchQuery) {
           const formattedQuery = encodeURIComponent(searchQuery.trim());
           endpoint += `&query=${formattedQuery}`;
         }
       } else {
-        // We need cursor from previous page - check if we can get from cache
+        // If we don't have the cursor for the requested page, we need to get the previous page cursor
         const prevPageCursor = cursorCache.get(page - 1);
         
-        // If we don't have previous page cursor, we need to fetch it
         if (!prevPageCursor) {
           console.log(`No cursor for page ${page-1}. Fetching previous page first...`);
           const previousPageResponse = await fetchShopifyProducts(page - 1, limit, searchQuery);
@@ -69,7 +67,7 @@ export const fetchShopifyProducts = async (
         
         endpoint = `products.json?limit=${limit}&page_info=${prevPageResult}`;
         
-        // Append search query if provided
+        // Add search query if provided
         if (searchQuery) {
           const formattedQuery = encodeURIComponent(searchQuery.trim());
           endpoint += `&query=${formattedQuery}`;
@@ -101,12 +99,6 @@ export const fetchShopifyProducts = async (
         // Cache the cursor for the next page
         cursorCache.set(page + 1, nextPageCursor);
       }
-    }
-    
-    // Cache pagination cursors from Link header
-    const cursorInfo = extractCursorFromLinkHeader(linkHeader);
-    if (cursorInfo.nextCursor) {
-      cursorCache.set(page + 1, cursorInfo.nextCursor);
     }
     
     // Log search results or failure
