@@ -1,20 +1,19 @@
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { ImageResult } from "@/services/searchService";
 import { 
   addImageToExistingProduct, 
-  uploadImageToShopify 
+  uploadImageToShopify,
+  clearApiCache 
 } from "@/services/shopify";
-import { PlusCircle, Loader2, Upload, RefreshCw } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 
 import { useProductsLoader } from "./hooks/useProductsLoader";
 import { ExistingProductTab } from "./components/ExistingProductTab";
 import { NewProductTab } from "./components/NewProductTab";
-import { clearApiCache } from "@/services/shopify/api";
+import { UploadStatusAlert } from "./components/UploadStatusAlert";
+import { UploadActionButtons } from "./components/UploadActionButtons";
 
 interface ShopifyUploaderProps {
   image: ImageResult;
@@ -155,44 +154,17 @@ const ShopifyUploader = ({ image }: ShopifyUploaderProps) => {
         </TabsContent>
       </Tabs>
       
-      {uploadStatus && (
-        <Alert variant={uploadStatus.success ? "default" : "destructive"}>
-          <AlertDescription>
-            {uploadStatus.message}
-          </AlertDescription>
-        </Alert>
-      )}
+      <UploadStatusAlert uploadStatus={uploadStatus} />
       
       <Separator className="my-4" />
       
-      <div className="pt-2 flex space-x-2">
-        <Button 
-          onClick={handleUpload} 
-          disabled={isUploading || (activeTab === "existing" && !selectedProductId)}
-          className="flex-grow gap-2"
-        >
-          {isUploading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : activeTab === "existing" ? (
-            <PlusCircle className="h-4 w-4" />
-          ) : (
-            <Upload className="h-4 w-4" />
-          )}
-          {isUploading ? "Uploading..." : activeTab === "existing" 
-            ? "Add Image to Product" 
-            : "Create New Product with Image"}
-        </Button>
-        
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={handleRefresh}
-          title="Refresh Products"
-          disabled={isUploading}
-        >
-          <RefreshCw className="h-4 w-4" />
-        </Button>
-      </div>
+      <UploadActionButtons 
+        isUploading={isUploading}
+        activeTab={activeTab}
+        selectedProductId={selectedProductId}
+        onUpload={handleUpload}
+        onRefresh={handleRefresh}
+      />
     </div>
   );
 };
