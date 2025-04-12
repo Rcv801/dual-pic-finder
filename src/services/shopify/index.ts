@@ -27,3 +27,8 @@ export {
   addImageToExistingProduct,
   uploadImageToShopify
 } from './images';
+
+// Re-export API utility functions
+export {
+  clearApiCache
+} from './api';
