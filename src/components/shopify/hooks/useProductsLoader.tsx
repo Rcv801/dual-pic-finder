@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from "react";
 import { ShopifyProduct, ShopifyProductsResponse } from "@/services/shopify/types";
 import { fetchShopifyProducts, clearPaginationCache } from "@/services/shopify/products";
@@ -22,8 +23,10 @@ export function useProductsLoader() {
     setLastLoadParams({page, query});
     
     try {
-      console.log(`Loading products for page ${page}, query: ${query}`);
+      console.log(`Loading products for page ${page}, query: "${query}"`);
       const response: ShopifyProductsResponse = await fetchShopifyProducts(page, 50, query);
+      
+      console.log(`Response received: ${response.products.length} products, hasNextPage: ${response.hasNextPage}`);
       
       if (response.products.length > 0) {
         // Update the products state with search results
@@ -41,15 +44,22 @@ export function useProductsLoader() {
           }
           return prev;
         });
+        
+        // Log first few product titles for debugging
+        console.log(`First 3 products: ${response.products.slice(0, 3).map(p => p.title).join(', ')}`);
       } else if (query) {
         // Clear products for search with no results
+        console.log(`Search "${query}" returned no products. Clearing product list.`);
         setProducts([]);
         setHasNextPage(false);
+        setSelectedProductId(null);
         toast.info(`No products found matching "${query}"`);
       } else if (page === 1) {
         // No products at all in the store
+        console.log("No products found in store (empty response)");
         setProducts([]);
         setHasNextPage(false);
+        setSelectedProductId(null);
       }
     } catch (error: any) {
       console.error("Error loading products:", error);
@@ -61,8 +71,10 @@ export function useProductsLoader() {
         errorMessage += "You've hit API rate limits. ";
       } else if (error.message.includes("CORS") || error.message.includes("Origin")) {
         errorMessage += "CORS proxy service is returning errors. ";
-      } else if (error.message.includes("page cannot be passed")) {
+      } else if (error.message.includes("page cannot be passed") || error.message.includes("query cannot be passed")) {
         errorMessage += "Pagination error with search results. ";
+        console.error("Pagination + query error details:", error);
+        
         // Reset to first page on pagination error
         if (currentPage > 1) {
           setCurrentPage(1);
@@ -116,21 +128,26 @@ export function useProductsLoader() {
 
   // Load products when page or search query changes
   useEffect(() => {
+    console.log(`Effect triggered: page=${currentPage}, query="${searchQuery}"`);
     loadProducts(currentPage, searchQuery);
   }, [currentPage, searchQuery, loadProducts]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log(`Search submitted: "${searchInputValue}" (current query: "${searchQuery}")`);
+    
     if (searchQuery !== searchInputValue) {
       // Reset pagination cache when search query changes
       clearPaginationCache();
       setSearchQuery(searchInputValue);
       setCurrentPage(1); // Reset to first page when search changes
+      console.log(`Search query updated to: "${searchInputValue}"`);
     }
   };
 
   const clearSearch = () => {
     if (searchQuery !== "") {
+      console.log("Clearing search");
       clearPaginationCache();
       setSearchInputValue("");
       setSearchQuery("");
@@ -140,6 +157,7 @@ export function useProductsLoader() {
 
   const goToPage = (page: number) => {
     if (page < 1) return;
+    console.log(`Navigating to page ${page}`);
     setCurrentPage(page);
   };
 

@@ -45,7 +45,16 @@ export default async function handler(req, res) {
     const apiVersion = '2025-04'; // Use latest Shopify API version
     const shopifyUrl = `https://${shopDomain}/admin/api/${apiVersion}/${targetEndpoint}`;
     
-    console.log(`Proxying request to: ${shopifyUrl}`);
+    // Enhanced logging for search-related requests
+    const isSearchRequest = targetEndpoint.includes('query=');
+    if (isSearchRequest) {
+      console.log('=== SEARCH REQUEST DETAILS ===');
+      console.log(`Full Shopify URL: ${shopifyUrl}`);
+      console.log(`Search query: ${targetEndpoint.match(/query=([^&]*)/)?.[1] || 'No query found'}`);
+      console.log(`Request method: ${method}`);
+    } else {
+      console.log(`Proxying request to: ${shopifyUrl}`);
+    }
 
     // Prepare fetch options
     const fetchOptions = {
@@ -80,6 +89,20 @@ export default async function handler(req, res) {
     
     // Parse the response based on content type
     const responseData = isJson ? await shopifyResponse.json() : await shopifyResponse.text();
+
+    // Enhanced logging for search-related responses
+    if (isSearchRequest) {
+      console.log('=== SEARCH RESPONSE DETAILS ===');
+      console.log(`Response status: ${shopifyResponse.status}`);
+      console.log(`Product count: ${responseData?.products?.length || 0}`);
+      if (responseData?.products?.length > 0) {
+        console.log(`First product title: ${responseData.products[0].title}`);
+        console.log(`Last product title: ${responseData.products[responseData.products.length - 1].title}`);
+      } else {
+        console.log('No products found in response');
+      }
+      console.log(`Link header: ${responseHeaders.link || 'No link header'}`);
+    }
 
     // Return response with status code and headers
     return res.status(shopifyResponse.status).json({

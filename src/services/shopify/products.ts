@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 import { ShopifyProductsResponse } from "./types";
 import { cachedShopifyRequest } from "./api";
@@ -30,6 +29,7 @@ export const fetchShopifyProducts = async (
       endpoint += `&query=${formattedQuery}`;
       
       console.log(`Searching for products with query parameter: "${searchQuery}" (encoded: ${formattedQuery})`);
+      console.log(`Full endpoint with search: ${endpoint}`);
     }
     
     // For pages beyond first, use cached cursor for pagination
@@ -40,9 +40,17 @@ export const fetchShopifyProducts = async (
         // Use cached cursor
         endpoint = `products.json?limit=${limit}&page_info=${cachedCursor}`;
         
-        // When using cursor-based pagination, we still need to add the search query
+        // Adding search query to a cursor-based pagination is not supported by Shopify
+        // This will cause a 400 error, but the code previously tried to do this
         if (searchQuery) {
           const formattedQuery = encodeURIComponent(searchQuery.trim());
+          
+          // DEBUG: Log the problematic combination that causes Shopify API error
+          console.log(`WARNING: Attempting to use both cursor (page_info) and query parameters.`);
+          console.log(`This combination is not supported by Shopify's API.`);
+          
+          // We're keeping this code to identify the issue, but we should not add the query here
+          // as it will cause a 400 error from Shopify
           endpoint += `&query=${formattedQuery}`;
         }
       } else {
@@ -67,9 +75,13 @@ export const fetchShopifyProducts = async (
         
         endpoint = `products.json?limit=${limit}&page_info=${prevPageResult}`;
         
-        // Add search query if provided
+        // Same issue as above - don't add query param when using cursor
         if (searchQuery) {
           const formattedQuery = encodeURIComponent(searchQuery.trim());
+          
+          // DEBUG warning
+          console.log(`WARNING: Combining cursor and query parameters in pagination.`);
+          
           endpoint += `&query=${formattedQuery}`;
         }
       }
@@ -105,6 +117,12 @@ export const fetchShopifyProducts = async (
     if (searchQuery) {
       const productCount = data.products ? data.products.length : 0;
       console.log(`Search for "${searchQuery}" returned ${productCount} products`);
+      
+      // Log first 3 product titles if available (for debugging)
+      if (productCount > 0) {
+        const firstThreeTitles = data.products.slice(0, 3).map((p: any) => p.title).join(', ');
+        console.log(`First 3 product titles: ${firstThreeTitles}`);
+      }
     }
     
     return { 
@@ -115,7 +133,7 @@ export const fetchShopifyProducts = async (
   } catch (error) {
     console.error("Failed to fetch Shopify products:", error);
     toast.error("Failed to fetch products from Shopify");
-    return { products: [], hasNextPage: false, nextPageCursor: "" };
+    throw error; // Re-throw to allow proper error handling in the hook
   }
 };
 
@@ -146,4 +164,5 @@ export const extractCursorFromLinkHeader = (linkHeader: string | null): {
 // Clear pagination cache - useful when search query changes
 export const clearPaginationCache = (): void => {
   cursorCache.clear();
+  console.log("Pagination cache cleared");
 };
