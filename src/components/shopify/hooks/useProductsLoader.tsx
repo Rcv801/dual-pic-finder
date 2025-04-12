@@ -27,6 +27,7 @@ export function useProductsLoader() {
       const response: ShopifyProductsResponse = await fetchShopifyProducts(page, 50, query);
       
       if (response.products.length > 0) {
+        // Update the products state with search results
         setProducts(response.products);
         setHasNextPage(response.hasNextPage);
         
