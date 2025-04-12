@@ -19,9 +19,9 @@ export const fetchShopifyProducts = async (
     // Build base URL with pagination parameters
     let endpoint = `products.json?limit=${limit}`;
     
-    // Add search query if provided - using a simpler approach for partial matches
+    // Add search query if provided
     if (searchQuery) {
-      // Don't use asterisk wildcard, let Shopify handle partial matching
+      // Format search query - ensure proper encoding
       const formattedQuery = encodeURIComponent(searchQuery.trim());
       endpoint += `&title=${formattedQuery}`;
       
@@ -30,7 +30,7 @@ export const fetchShopifyProducts = async (
         clearPaginationCache();
       }
       
-      console.log(`Searching for products with query: "${searchQuery}"`);
+      console.log(`Searching for products with query: "${searchQuery}" (encoded: ${formattedQuery})`);
     }
     
     // For pages beyond first, use cached cursor or fetch previous page
@@ -78,7 +78,7 @@ export const fetchShopifyProducts = async (
     console.log(`Fetching products from endpoint: ${endpoint}`);
     
     // Force refresh for search queries to ensure latest results
-    const forceRefresh = searchQuery ? true : false;
+    const forceRefresh = !!searchQuery;
     
     // Use the cached API request to reduce actual API calls
     const { data, headers } = await cachedShopifyRequest(endpoint, "GET", null, forceRefresh);

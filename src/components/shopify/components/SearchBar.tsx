@@ -22,7 +22,7 @@ export function SearchBar({
         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
           type="text"
-          placeholder="Search products by title..."
+          placeholder="Search products..."
           value={searchInputValue}
           onChange={(e) => onSearchInputChange(e.target.value)}
           className="pl-9 pr-9"
@@ -41,7 +41,7 @@ export function SearchBar({
       <Button 
         type="submit" 
         size="sm"
-        title="Search products by partial match - even single characters will work"
+        title="Search products by title - partial matches are supported"
       >
         Search
       </Button>
