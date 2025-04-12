@@ -35,12 +35,18 @@ export const fetchShopifyProducts = async (
       console.log(`Searching for products with query parameter: "${searchQuery}" (encoded: ${formattedQuery})`);
     }
     
-    // For pages beyond first, use cached cursor for regular pagination
-    // BUT don't use cursor for search - it doesn't work with search queries
-    if (page > 1 && !searchQuery) {
+    // For pages beyond first, use cached cursor for pagination
+    // Use cursor-based pagination for both regular and search queries
+    if (page > 1) {
       if (cachedCursor) {
         // Use cached cursor
         endpoint = `products.json?limit=${limit}&page_info=${cachedCursor}`;
+        
+        // Append search query if provided
+        if (searchQuery) {
+          const formattedQuery = encodeURIComponent(searchQuery.trim());
+          endpoint += `&query=${formattedQuery}`;
+        }
       } else {
         // We need cursor from previous page - check if we can get from cache
         const prevPageCursor = cursorCache.get(page - 1);
@@ -63,10 +69,13 @@ export const fetchShopifyProducts = async (
         }
         
         endpoint = `products.json?limit=${limit}&page_info=${prevPageResult}`;
+        
+        // Append search query if provided
+        if (searchQuery) {
+          const formattedQuery = encodeURIComponent(searchQuery.trim());
+          endpoint += `&query=${formattedQuery}`;
+        }
       }
-    } else if (page > 1 && searchQuery) {
-      // For search queries, use a different approach - use page parameter
-      endpoint = `products.json?limit=${limit}&page=${page}&query=${encodeURIComponent(searchQuery.trim())}`;
     }
     
     console.log(`Fetching products from endpoint: ${endpoint}`);

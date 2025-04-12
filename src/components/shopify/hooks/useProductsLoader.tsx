@@ -62,6 +62,13 @@ export function useProductsLoader() {
         errorMessage += "You've hit API rate limits. ";
       } else if (error.message.includes("CORS") || error.message.includes("Origin")) {
         errorMessage += "CORS proxy service is returning errors. ";
+      } else if (error.message.includes("page cannot be passed")) {
+        errorMessage += "Pagination error with search results. ";
+        // Reset to first page on pagination error
+        if (currentPage > 1) {
+          setCurrentPage(1);
+          return; // Will trigger a re-fetch via useEffect
+        }
       }
       
       errorMessage += "Consider setting up a serverless proxy function.";
@@ -73,7 +80,7 @@ export function useProductsLoader() {
     } finally {
       setIsLoadingProducts(false);
     }
-  }, [selectedProductId]);
+  }, [selectedProductId, currentPage]);
 
   // Refresh products by forcing a cache refresh
   const refreshProducts = useCallback(() => {
