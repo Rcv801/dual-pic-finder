@@ -36,7 +36,7 @@ export function ProductList({
         </p>
         <p className="text-sm text-gray-400 mt-1">
           {searchQuery 
-            ? null
+            ? "Try different search terms or use partial words"
             : "Try creating a product first or switch to \"Create New Product\"."
           }
         </p>

@@ -13,6 +13,11 @@ export const fetchShopifyProducts = async (
   searchQuery: string = ""
 ): Promise<ShopifyProductsResponse> => {
   try {
+    // Clear pagination cache when doing a search with a new query
+    if (searchQuery && page === 1) {
+      clearPaginationCache();
+    }
+    
     // Check if we already have the cursor for this page in cache
     const cachedCursor = cursorCache.get(page);
     
@@ -26,11 +31,6 @@ export const fetchShopifyProducts = async (
       
       // Use 'query' parameter instead of 'title' for better search capabilities
       endpoint += `&query=${formattedQuery}`;
-      
-      // Clear pagination cache when doing a search
-      if (page === 1) {
-        clearPaginationCache();
-      }
       
       console.log(`Searching for products with query parameter: "${searchQuery}" (encoded: ${formattedQuery})`);
     }
@@ -105,11 +105,6 @@ export const fetchShopifyProducts = async (
     if (searchQuery) {
       const productCount = data.products ? data.products.length : 0;
       console.log(`Search for "${searchQuery}" returned ${productCount} products`);
-      
-      if (productCount === 0 && page === 1) {
-        // Only show toast for first page with no results
-        toast.info(`No products found matching "${searchQuery}"`);
-      }
     }
     
     return { 
@@ -152,3 +147,4 @@ export const extractCursorFromLinkHeader = (linkHeader: string | null): {
 export const clearPaginationCache = (): void => {
   cursorCache.clear();
 };
+
