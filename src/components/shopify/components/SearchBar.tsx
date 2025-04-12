@@ -41,7 +41,7 @@ export function SearchBar({
       <Button 
         type="submit" 
         size="sm"
-        title="Search products by title - partial matches are supported"
+        title="Search products by name, description, or other attributes"
       >
         Search
       </Button>

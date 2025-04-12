@@ -19,18 +19,20 @@ export const fetchShopifyProducts = async (
     // Build base URL with pagination parameters
     let endpoint = `products.json?limit=${limit}`;
     
-    // Add search query if provided
+    // Add search query if provided - use the query parameter for better partial matching
     if (searchQuery) {
       // Format search query - ensure proper encoding
       const formattedQuery = encodeURIComponent(searchQuery.trim());
-      endpoint += `&title=${formattedQuery}`;
+      
+      // Use 'query' parameter instead of 'title' for better search capabilities
+      endpoint += `&query=${formattedQuery}`;
       
       // Clear pagination cache when doing a search
       if (page === 1) {
         clearPaginationCache();
       }
       
-      console.log(`Searching for products with query: "${searchQuery}" (encoded: ${formattedQuery})`);
+      console.log(`Searching for products with query parameter: "${searchQuery}" (encoded: ${formattedQuery})`);
     }
     
     // For pages beyond first, use cached cursor or fetch previous page
@@ -42,7 +44,7 @@ export const fetchShopifyProducts = async (
         // If search query exists, we need to append it again
         if (searchQuery) {
           const formattedQuery = encodeURIComponent(searchQuery.trim());
-          endpoint += `&title=${formattedQuery}`;
+          endpoint += `&query=${formattedQuery}`;
         }
       } else {
         // We need cursor from previous page - check if we can get from cache
@@ -70,7 +72,7 @@ export const fetchShopifyProducts = async (
         // If search query exists, we need to append it again
         if (searchQuery) {
           const formattedQuery = encodeURIComponent(searchQuery.trim());
-          endpoint += `&title=${formattedQuery}`;
+          endpoint += `&query=${formattedQuery}`;
         }
       }
     }
