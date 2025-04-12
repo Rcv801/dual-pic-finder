@@ -43,31 +43,32 @@ export const testShopifyConnection = async (credentials: ShopifyCredentials): Pr
   const { shopDomain, accessToken } = credentials;
   
   try {
-    // Use CORS proxy to avoid CORS issues
-    const corsProxy = "https://cors-anywhere.herokuapp.com/";
-    const targetUrl = `https://${shopDomain}/admin/api/2025-04/shop.json`;
+    // Use our Vercel serverless proxy instead of direct CORS proxy
+    const proxyUrl = "https://dual-pic-finder.vercel.app/api/shopify-proxy";
     
-    console.log("Testing connection to:", targetUrl);
+    console.log("Testing connection to Shopify shop:", shopDomain);
     
-    const response = await fetch(
-      `${corsProxy}${targetUrl}`,
-      {
+    const response = await fetch(proxyUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        shopDomain,
+        accessToken,
+        targetEndpoint: "shop.json",
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Shopify-Access-Token": accessToken,
-          "Origin": window.location.origin
-        }
-      }
-    );
+        body: null,
+      }),
+    });
     
     if (!response.ok) {
       console.error("Shopify connection test failed:", response.status, await response.text());
       return false;
     }
     
-    const data = await response.json();
-    console.log("Shopify connection successful:", data);
+    const responseData = await response.json();
+    console.log("Shopify connection successful:", responseData.data);
     return true;
   } catch (error) {
     console.error("Failed to test Shopify connection:", error);

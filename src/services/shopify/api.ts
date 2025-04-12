@@ -19,8 +19,8 @@ export const makeShopifyRequest = async (
   const { shopDomain, accessToken } = credentials;
   
   try {
-    // Use our serverless proxy endpoint instead of direct CORS proxy
-    const proxyUrl = "https://shopifyproxy.onrender.com/proxy";
+    // Use the Vercel serverless proxy endpoint
+    const proxyUrl = "https://dual-pic-finder.vercel.app/api/shopify-proxy";
     
     const options: RequestInit = {
       method: "POST", // Always POST to our proxy
