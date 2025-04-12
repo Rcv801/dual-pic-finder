@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from "react";
 import { ShopifyProduct, ShopifyProductsResponse } from "@/services/shopify/types";
 import { fetchShopifyProducts, clearPaginationCache } from "@/services/shopify/products";
