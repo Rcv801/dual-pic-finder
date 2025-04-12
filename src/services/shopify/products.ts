@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 import { ShopifyProductsResponse } from "./types";
 import { cachedShopifyRequest } from "./api";
@@ -156,4 +155,3 @@ export const extractCursorFromLinkHeader = (linkHeader: string | null): {
 export const clearPaginationCache = (): void => {
   cursorCache.clear();
 };
-
