@@ -19,10 +19,16 @@ export const fetchShopifyProducts = async (
     // Build base URL with pagination parameters
     let endpoint = `products.json?limit=${limit}`;
     
-    // Add search query if provided
+    // Add search query if provided - using a case-insensitive search approach
     if (searchQuery) {
-      // Use query parameter for search (title contains the search term)
-      endpoint += `&title=${encodeURIComponent(searchQuery)}`;
+      // Use title field with asterisk wildcard for partial matches
+      const formattedQuery = encodeURIComponent(searchQuery.trim());
+      endpoint += `&title=${formattedQuery}*`;
+      
+      // Clear pagination cache when doing a search
+      if (page === 1) {
+        clearPaginationCache();
+      }
     }
     
     // For pages beyond first, use cached cursor or fetch previous page
@@ -33,7 +39,8 @@ export const fetchShopifyProducts = async (
         
         // If search query exists, we need to append it again
         if (searchQuery) {
-          endpoint += `&title=${encodeURIComponent(searchQuery)}`;
+          const formattedQuery = encodeURIComponent(searchQuery.trim());
+          endpoint += `&title=${formattedQuery}*`;
         }
       } else {
         // We need cursor from previous page - check if we can get from cache
@@ -60,7 +67,8 @@ export const fetchShopifyProducts = async (
         
         // If search query exists, we need to append it again
         if (searchQuery) {
-          endpoint += `&title=${encodeURIComponent(searchQuery)}`;
+          const formattedQuery = encodeURIComponent(searchQuery.trim());
+          endpoint += `&title=${formattedQuery}*`;
         }
       }
     }
@@ -68,7 +76,7 @@ export const fetchShopifyProducts = async (
     console.log(`Fetching products from endpoint: ${endpoint}`);
     
     // Use the cached API request to reduce actual API calls
-    const { data, headers } = await cachedShopifyRequest(endpoint);
+    const { data, headers } = await cachedShopifyRequest(endpoint, "GET", null, searchQuery ? true : false);
     
     // Parse Link header for pagination information
     const linkHeader = headers.get('Link');
@@ -134,3 +142,4 @@ export const extractCursorFromLinkHeader = (linkHeader: string | null): {
 export const clearPaginationCache = (): void => {
   cursorCache.clear();
 };
+

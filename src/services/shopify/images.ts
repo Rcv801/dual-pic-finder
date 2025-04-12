@@ -7,23 +7,38 @@ export const addImageToExistingProduct = async (
   imageUrl: string
 ): Promise<boolean> => {
   try {
+    console.log(`Adding image to product ${productId}: ${imageUrl}`);
     const endpoint = `products/${productId}/images.json`;
     
-    await makeShopifyRequest(
+    // Use object notation to ensure proper JSON structure
+    const payload = {
+      image: {
+        src: imageUrl,
+        position: 1,
+        alt: "Uploaded from Image Finder"
+      }
+    };
+    
+    const result = await makeShopifyRequest(
       endpoint,
       "POST",
-      {
-        image: {
-          src: imageUrl
-        }
-      }
+      payload
     );
     
-    toast.success("Image added to existing product successfully!");
+    if (!result || !result.data || !result.data.image) {
+      throw new Error("Invalid response from Shopify API");
+    }
+    
+    console.log("Image upload response:", result);
+    toast.success("Image added to product successfully!");
+    
+    // Clear any API cache that might be relevant
+    clearApiCache();
+    
     return true;
   } catch (error) {
     console.error("Failed to add image to Shopify product:", error);
-    toast.error("Failed to add image to Shopify product");
+    toast.error("Failed to add image to Shopify product. Please check console for details.");
     return false;
   }
 };
@@ -34,26 +49,48 @@ export const uploadImageToShopify = async (
   title: string
 ): Promise<boolean> => {
   try {
-    await makeShopifyRequest(
+    console.log(`Creating new product with image: ${imageUrl}`);
+    
+    // Use object notation to ensure proper JSON structure
+    const payload = {
+      product: {
+        title: title || "Imported Product",
+        body_html: "<p>Product imported from Image Finder</p>",
+        vendor: "Image Finder",
+        product_type: "Imported",
+        images: [
+          {
+            src: imageUrl,
+            position: 1,
+            alt: "Uploaded from Image Finder"
+          }
+        ]
+      }
+    };
+    
+    const result = await makeShopifyRequest(
       "products.json",
       "POST",
-      {
-        product: {
-          title: title || "Imported Product",
-          images: [
-            {
-              src: imageUrl
-            }
-          ]
-        }
-      }
+      payload
     );
     
-    toast.success("Image uploaded to Shopify successfully!");
+    if (!result || !result.data || !result.data.product) {
+      throw new Error("Invalid response from Shopify API");
+    }
+    
+    console.log("Product creation response:", result);
+    toast.success("New product with image created successfully!");
+    
+    // Clear any API cache that might be relevant
+    clearApiCache();
+    
     return true;
   } catch (error) {
-    console.error("Failed to upload image to Shopify:", error);
-    toast.error("Failed to upload image to Shopify");
+    console.error("Failed to create product with image:", error);
+    toast.error("Failed to create product with image. Please check console for details.");
     return false;
   }
 };
+
+// Import the clearApiCache function
+import { clearApiCache } from "./api";

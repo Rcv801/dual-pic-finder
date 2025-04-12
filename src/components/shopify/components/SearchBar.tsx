@@ -26,6 +26,7 @@ export function SearchBar({
           value={searchInputValue}
           onChange={(e) => onSearchInputChange(e.target.value)}
           className="pl-9 pr-9"
+          autoComplete="off"
         />
         {searchInputValue && (
           <button 
@@ -37,7 +38,13 @@ export function SearchBar({
           </button>
         )}
       </div>
-      <Button type="submit" size="sm">Search</Button>
+      <Button 
+        type="submit" 
+        size="sm"
+        title="Search products by name - use partial terms like 'zip' for 'zippo'"
+      >
+        Search
+      </Button>
     </form>
   );
 }

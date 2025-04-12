@@ -17,7 +17,7 @@ export function useProductsLoader() {
   const [error, setError] = useState<string | null>(null);
   const [lastLoadParams, setLastLoadParams] = useState<{page: number, query: string} | null>(null);
 
-  const loadProducts = useCallback(async (page: number, query: string) => {
+  const loadProducts = useCallback(async (page: number, query: string, forceRefresh: boolean = false) => {
     setIsLoadingProducts(true);
     setError(null);
     setLastLoadParams({page, query});
@@ -74,6 +74,21 @@ export function useProductsLoader() {
     }
   }, [selectedProductId]);
 
+  // Refresh products by forcing a cache refresh
+  const refreshProducts = useCallback(() => {
+    // Clear caches to force a fresh fetch
+    clearPaginationCache();
+    clearApiCache();
+    
+    toast.info("Refreshing product list...");
+    
+    // Reset to first page
+    setCurrentPage(1);
+    
+    // Force reload with current search query
+    loadProducts(1, searchQuery, true);
+  }, [searchQuery, loadProducts]);
+
   // Retry function when API call fails
   const retryLoading = useCallback(() => {
     if (lastLoadParams) {
@@ -82,7 +97,7 @@ export function useProductsLoader() {
       clearApiCache();
       
       // Retry with the last params
-      loadProducts(lastLoadParams.page, lastLoadParams.query);
+      loadProducts(lastLoadParams.page, lastLoadParams.query, true);
       toast.info("Retrying product load...");
     }
   }, [lastLoadParams, loadProducts]);
@@ -136,6 +151,7 @@ export function useProductsLoader() {
     handleSearch,
     clearSearch,
     goToPage,
-    retryLoading
+    retryLoading,
+    refreshProducts
   };
 }

@@ -6,13 +6,15 @@ import {
   addImageToExistingProduct, 
   uploadImageToShopify 
 } from "@/services/shopify";
-import { PlusCircle, Loader2, Upload } from "lucide-react";
+import { PlusCircle, Loader2, Upload, RefreshCw } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 import { useProductsLoader } from "./hooks/useProductsLoader";
 import { ExistingProductTab } from "./components/ExistingProductTab";
 import { NewProductTab } from "./components/NewProductTab";
+import { clearApiCache } from "@/services/shopify/api";
 
 interface ShopifyUploaderProps {
   image: ImageResult;
@@ -22,6 +24,7 @@ const ShopifyUploader = ({ image }: ShopifyUploaderProps) => {
   const [isUploading, setIsUploading] = useState(false);
   const [customTitle, setCustomTitle] = useState(image.title || "");
   const [activeTab, setActiveTab] = useState("existing");
+  const [uploadStatus, setUploadStatus] = useState<{success: boolean; message: string} | null>(null);
   
   const { 
     products,
@@ -37,22 +40,40 @@ const ShopifyUploader = ({ image }: ShopifyUploaderProps) => {
     handleSearch,
     clearSearch,
     goToPage,
-    retryLoading
+    retryLoading,
+    refreshProducts
   } = useProductsLoader();
+
+  const handleRefresh = () => {
+    clearApiCache();
+    refreshProducts();
+    setUploadStatus(null);
+  };
 
   const handleUploadToNew = async () => {
     setIsUploading(true);
+    setUploadStatus(null);
+    
     try {
       const success = await uploadImageToShopify(
         image.imageUrl,
         customTitle || image.title
       );
       
-      if (!success) {
+      if (success) {
+        setUploadStatus({
+          success: true,
+          message: "New product created successfully! It may take a few minutes to appear in your Shopify store."
+        });
+      } else {
         throw new Error("Upload failed");
       }
     } catch (error) {
       console.error("Error uploading to Shopify:", error);
+      setUploadStatus({
+        success: false,
+        message: "Failed to create product. Please check console for details."
+      });
     } finally {
       setIsUploading(false);
     }
@@ -62,17 +83,28 @@ const ShopifyUploader = ({ image }: ShopifyUploaderProps) => {
     if (!selectedProductId) return;
     
     setIsUploading(true);
+    setUploadStatus(null);
+    
     try {
       const success = await addImageToExistingProduct(
         selectedProductId,
         image.imageUrl
       );
       
-      if (!success) {
+      if (success) {
+        setUploadStatus({
+          success: true,
+          message: "Image added to product successfully! It may take a few minutes to appear in your Shopify store."
+        });
+      } else {
         throw new Error("Upload failed");
       }
     } catch (error) {
       console.error("Error adding image to product:", error);
+      setUploadStatus({
+        success: false,
+        message: "Failed to add image to product. Please check console for details."
+      });
     } finally {
       setIsUploading(false);
     }
@@ -123,13 +155,21 @@ const ShopifyUploader = ({ image }: ShopifyUploaderProps) => {
         </TabsContent>
       </Tabs>
       
+      {uploadStatus && (
+        <Alert variant={uploadStatus.success ? "default" : "destructive"}>
+          <AlertDescription>
+            {uploadStatus.message}
+          </AlertDescription>
+        </Alert>
+      )}
+      
       <Separator className="my-4" />
       
-      <div className="pt-2">
+      <div className="pt-2 flex space-x-2">
         <Button 
           onClick={handleUpload} 
           disabled={isUploading || (activeTab === "existing" && !selectedProductId)}
-          className="w-full gap-2"
+          className="flex-grow gap-2"
         >
           {isUploading ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -141,6 +181,16 @@ const ShopifyUploader = ({ image }: ShopifyUploaderProps) => {
           {isUploading ? "Uploading..." : activeTab === "existing" 
             ? "Add Image to Product" 
             : "Create New Product with Image"}
+        </Button>
+        
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={handleRefresh}
+          title="Refresh Products"
+          disabled={isUploading}
+        >
+          <RefreshCw className="h-4 w-4" />
         </Button>
       </div>
     </div>
