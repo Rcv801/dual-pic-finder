@@ -41,7 +41,7 @@ export function SearchBar({
       <Button 
         type="submit" 
         size="sm"
-        title="Search products by name - use partial terms like 'zip' for 'zippo'"
+        title="Search products by partial match - even single characters will work"
       >
         Search
       </Button>

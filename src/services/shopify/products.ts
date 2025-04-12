@@ -19,16 +19,18 @@ export const fetchShopifyProducts = async (
     // Build base URL with pagination parameters
     let endpoint = `products.json?limit=${limit}`;
     
-    // Add search query if provided - using a case-insensitive search approach
+    // Add search query if provided - using a simpler approach for partial matches
     if (searchQuery) {
-      // Use title field with asterisk wildcard for partial matches
+      // Don't use asterisk wildcard, let Shopify handle partial matching
       const formattedQuery = encodeURIComponent(searchQuery.trim());
-      endpoint += `&title=${formattedQuery}*`;
+      endpoint += `&title=${formattedQuery}`;
       
       // Clear pagination cache when doing a search
       if (page === 1) {
         clearPaginationCache();
       }
+      
+      console.log(`Searching for products with query: "${searchQuery}"`);
     }
     
     // For pages beyond first, use cached cursor or fetch previous page
@@ -40,7 +42,7 @@ export const fetchShopifyProducts = async (
         // If search query exists, we need to append it again
         if (searchQuery) {
           const formattedQuery = encodeURIComponent(searchQuery.trim());
-          endpoint += `&title=${formattedQuery}*`;
+          endpoint += `&title=${formattedQuery}`;
         }
       } else {
         // We need cursor from previous page - check if we can get from cache
@@ -68,15 +70,18 @@ export const fetchShopifyProducts = async (
         // If search query exists, we need to append it again
         if (searchQuery) {
           const formattedQuery = encodeURIComponent(searchQuery.trim());
-          endpoint += `&title=${formattedQuery}*`;
+          endpoint += `&title=${formattedQuery}`;
         }
       }
     }
     
     console.log(`Fetching products from endpoint: ${endpoint}`);
     
+    // Force refresh for search queries to ensure latest results
+    const forceRefresh = searchQuery ? true : false;
+    
     // Use the cached API request to reduce actual API calls
-    const { data, headers } = await cachedShopifyRequest(endpoint, "GET", null, searchQuery ? true : false);
+    const { data, headers } = await cachedShopifyRequest(endpoint, "GET", null, forceRefresh);
     
     // Parse Link header for pagination information
     const linkHeader = headers.get('Link');
@@ -100,6 +105,17 @@ export const fetchShopifyProducts = async (
     const cursorInfo = extractCursorFromLinkHeader(linkHeader);
     if (cursorInfo.nextCursor) {
       cursorCache.set(page + 1, cursorInfo.nextCursor);
+    }
+    
+    // Log search results or failure
+    if (searchQuery) {
+      const productCount = data.products ? data.products.length : 0;
+      console.log(`Search for "${searchQuery}" returned ${productCount} products`);
+      
+      if (productCount === 0 && page === 1) {
+        // Only show toast for first page with no results
+        toast.info(`No products found matching "${searchQuery}"`);
+      }
     }
     
     return { 
@@ -142,4 +158,3 @@ export const extractCursorFromLinkHeader = (linkHeader: string | null): {
 export const clearPaginationCache = (): void => {
   cursorCache.clear();
 };
-
