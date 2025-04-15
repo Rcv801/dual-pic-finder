@@ -16,6 +16,7 @@ export function useProductsLoader() {
   const [totalProducts, setTotalProducts] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [lastLoadParams, setLastLoadParams] = useState<{page: number, query: string} | null>(null);
+  const [isSearchActive, setIsSearchActive] = useState(false);
 
   const loadProducts = useCallback(async (page: number, query: string, forceRefresh: boolean = false) => {
     setIsLoadingProducts(true);
@@ -24,6 +25,11 @@ export function useProductsLoader() {
     
     try {
       console.log(`Loading products for page ${page}, query: "${query}"`);
+      const isSearchRequest = query.trim().length > 0;
+      
+      // Set search active flag based on whether there's a query
+      setIsSearchActive(isSearchRequest);
+      
       // Always force refresh for search queries to avoid stale results
       const response: ShopifyProductsResponse = await fetchShopifyProducts(page, 50, query);
       
@@ -46,9 +52,6 @@ export function useProductsLoader() {
           return prev;
         });
         
-        // Log first few product titles for debugging
-        console.log(`First 3 products: ${response.products.slice(0, 3).map(p => p.title).join(', ')}`);
-        
         // For search queries, verify if search results actually match the query
         if (query) {
           const searchTerm = query.toLowerCase();
@@ -59,6 +62,11 @@ export function useProductsLoader() {
           if (matchingProducts.length === 0 && response.products.length > 0) {
             console.warn(`Warning: None of the returned products contain "${query}" in their title.`);
             console.warn("Shopify search might be using broader match criteria.");
+            
+            // Show a toast to let the user know about the search results
+            toast.info(`No exact matches for "${query}". Showing related products.`, {
+              duration: 4000
+            });
           }
         }
       } else if (query) {
@@ -177,6 +185,7 @@ export function useProductsLoader() {
       setSearchInputValue("");
       setSearchQuery("");
       setCurrentPage(1); // Reset to first page when search is cleared
+      setIsSearchActive(false); // Explicitly set search inactive
       toast.info("Search cleared");
     }
   };
@@ -197,6 +206,7 @@ export function useProductsLoader() {
     searchInputValue,
     totalProducts,
     error,
+    isSearchActive,
     setSelectedProductId,
     setSearchInputValue,
     handleSearch,

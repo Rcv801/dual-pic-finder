@@ -11,6 +11,7 @@ interface ProductListProps {
   selectedProductId: number | null;
   onSelectProduct: (productId: number) => void;
   searchQuery: string;
+  isSearchActive?: boolean;
 }
 
 export function ProductList({
@@ -18,7 +19,8 @@ export function ProductList({
   isLoading,
   selectedProductId,
   onSelectProduct,
-  searchQuery
+  searchQuery,
+  isSearchActive
 }: ProductListProps) {
   if (isLoading) {
     return (
@@ -61,6 +63,12 @@ export function ProductList({
           </div>
         ))}
       </RadioGroup>
+      
+      {isSearchActive && searchQuery && products.length > 0 && (
+        <div className="mt-2 text-xs text-blue-600">
+          Showing products related to "{searchQuery}" - some may not contain the exact search term
+        </div>
+      )}
     </ScrollArea>
   );
 }

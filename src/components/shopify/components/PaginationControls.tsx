@@ -13,13 +13,15 @@ interface PaginationControlsProps {
   hasNextPage: boolean;
   onPageChange: (page: number) => void;
   searchQuery: string;
+  isSearchActive?: boolean;
 }
 
 export function PaginationControls({
   currentPage,
   hasNextPage,
   onPageChange,
-  searchQuery
+  searchQuery,
+  isSearchActive
 }: PaginationControlsProps) {
   return (
     <>
@@ -50,7 +52,10 @@ export function PaginationControls({
       </Pagination>
       
       <p className="text-sm text-gray-500">
-        {searchQuery ? `Showing results for "${searchQuery}"` : `Page ${currentPage} - The image will be added to the selected product.`}
+        {isSearchActive 
+          ? `Showing results for "${searchQuery}" - page ${currentPage}`
+          : `Page ${currentPage} - The image will be added to the selected product.`
+        }
       </p>
     </>
   );
