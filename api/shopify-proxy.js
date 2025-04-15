@@ -1,4 +1,3 @@
-
 // Vercel Serverless Function to proxy Shopify API requests
 
 // Set CORS headers to allow requests from any origin
@@ -42,18 +41,18 @@ export default async function handler(req, res) {
     }
 
     // Build the target Shopify API URL
-    const apiVersion = '2025-04'; // Use latest Shopify API version
+    const apiVersion = '2025-04';
     const shopifyUrl = `https://${shopDomain}/admin/api/${apiVersion}/${targetEndpoint}`;
     
-    // Enhanced logging for search-related requests
-    const isSearchRequest = targetEndpoint.includes('query=');
-    if (isSearchRequest) {
-      console.log('=== SEARCH REQUEST DETAILS ===');
-      console.log(`Full Shopify URL: ${shopifyUrl}`);
-      console.log(`Search query: ${targetEndpoint.match(/query=([^&]*)/)?.[1] || 'No query found'}`);
-      console.log(`Request method: ${method}`);
-    } else {
-      console.log(`Proxying request to: ${shopifyUrl}`);
+    // Enhanced logging for all requests
+    console.log('\n=== SHOPIFY API REQUEST DETAILS ===');
+    console.log(`Full Shopify URL: ${shopifyUrl}`);
+    console.log(`Request method: ${method}`);
+    console.log(`Request endpoint: ${targetEndpoint}`);
+    
+    if (targetEndpoint.includes('query=')) {
+      const searchQuery = targetEndpoint.match(/query=([^&]*)/)?.[1] || 'No query found';
+      console.log(`Search query (decoded): ${decodeURIComponent(searchQuery)}`);
     }
 
     // Prepare fetch options
@@ -73,6 +72,11 @@ export default async function handler(req, res) {
     // Make the request to Shopify API
     const shopifyResponse = await fetch(shopifyUrl, fetchOptions);
     
+    // Enhanced logging for responses
+    console.log('\n=== SHOPIFY API RESPONSE DETAILS ===');
+    console.log(`Response status: ${shopifyResponse.status}`);
+    console.log(`Response status text: ${shopifyResponse.statusText}`);
+
     // Get the response headers to pass them back to the client
     const responseHeaders = {};
     shopifyResponse.headers.forEach((value, key) => {
@@ -90,18 +94,17 @@ export default async function handler(req, res) {
     // Parse the response based on content type
     const responseData = isJson ? await shopifyResponse.json() : await shopifyResponse.text();
 
-    // Enhanced logging for search-related responses
-    if (isSearchRequest) {
-      console.log('=== SEARCH RESPONSE DETAILS ===');
-      console.log(`Response status: ${shopifyResponse.status}`);
-      console.log(`Product count: ${responseData?.products?.length || 0}`);
-      if (responseData?.products?.length > 0) {
-        console.log(`First product title: ${responseData.products[0].title}`);
-        console.log(`Last product title: ${responseData.products[responseData.products.length - 1].title}`);
+    // Log response data details
+    if (isJson && responseData.products) {
+      console.log(`Total products returned: ${responseData.products.length}`);
+      if (responseData.products.length > 0) {
+        console.log('First product:', {
+          id: responseData.products[0].id,
+          title: responseData.products[0].title
+        });
       } else {
         console.log('No products found in response');
       }
-      console.log(`Link header: ${responseHeaders.link || 'No link header'}`);
     }
 
     // Return response with status code and headers
@@ -112,7 +115,9 @@ export default async function handler(req, res) {
       data: responseData,
     });
   } catch (error) {
-    console.error('Proxy error:', error);
+    console.error('\n=== SHOPIFY API ERROR ===');
+    console.error('Error details:', error);
+    console.error('Stack trace:', error.stack);
     return res.status(500).json({ 
       error: 'Error proxying request to Shopify API', 
       message: error.message 

@@ -12,24 +12,23 @@ export const fetchShopifyProducts = async (
   searchQuery: string = ""
 ): Promise<ShopifyProductsResponse> => {
   try {
+    console.log('\n=== FRONTEND REQUEST DETAILS ===');
+    console.log(`Page: ${page}, Limit: ${limit}, Search Query: "${searchQuery}"`);
+    
     // Clear pagination cache when doing a search with a new query
     if (searchQuery && page === 1) {
       clearPaginationCache();
     }
     
-    // Build base URL with pagination parameters
     let endpoint = `products.json?limit=${limit}`;
     
-    // Add search query if provided - use the query parameter for better partial matching
     if (searchQuery) {
-      // Format search query - ensure proper encoding
       const formattedQuery = encodeURIComponent(searchQuery.trim());
-      
-      // Use 'query' parameter instead of 'title' for better search capabilities
       endpoint += `&query=${formattedQuery}`;
       
-      console.log(`Searching for products with query parameter: "${searchQuery}" (encoded: ${formattedQuery})`);
-      console.log(`Full endpoint with search: ${endpoint}`);
+      console.log(`Search endpoint: ${endpoint}`);
+      console.log(`Original query: "${searchQuery}"`);
+      console.log(`Encoded query: "${formattedQuery}"`);
     }
     
     // For pages beyond first, use cached cursor for pagination
@@ -87,13 +86,12 @@ export const fetchShopifyProducts = async (
       }
     }
     
-    console.log(`Fetching products from endpoint: ${endpoint}`);
+    console.log(`Final endpoint being called: ${endpoint}`);
     
-    // Force refresh for search queries to ensure latest results
-    const forceRefresh = !!searchQuery;
+    const { data, headers } = await cachedShopifyRequest(endpoint, "GET", null, !!searchQuery);
     
-    // Use the cached API request to reduce actual API calls
-    const { data, headers } = await cachedShopifyRequest(endpoint, "GET", null, forceRefresh);
+    console.log('\n=== FRONTEND RESPONSE DETAILS ===');
+    console.log(`Products received: ${data.products?.length || 0}`);
     
     // Parse Link header for pagination information
     const linkHeader = headers.get('Link');
@@ -115,13 +113,11 @@ export const fetchShopifyProducts = async (
     
     // Log search results or failure
     if (searchQuery) {
-      const productCount = data.products ? data.products.length : 0;
-      console.log(`Search for "${searchQuery}" returned ${productCount} products`);
-      
-      // Log first 3 product titles if available (for debugging)
-      if (productCount > 0) {
-        const firstThreeTitles = data.products.slice(0, 3).map((p: any) => p.title).join(', ');
-        console.log(`First 3 product titles: ${firstThreeTitles}`);
+      console.log(`Search results for "${searchQuery}":`);
+      console.log(`- Total products: ${data.products?.length || 0}`);
+      if (data.products?.length > 0) {
+        console.log(`- First product: ${data.products[0].title}`);
+        console.log(`- Last product: ${data.products[data.products.length - 1].title}`);
       }
     }
     
@@ -131,9 +127,10 @@ export const fetchShopifyProducts = async (
       nextPageCursor
     };
   } catch (error) {
-    console.error("Failed to fetch Shopify products:", error);
+    console.error('\n=== FRONTEND ERROR ===');
+    console.error('Error in fetchShopifyProducts:', error);
     toast.error("Failed to fetch products from Shopify");
-    throw error; // Re-throw to allow proper error handling in the hook
+    throw error;
   }
 };
 
