@@ -1,8 +1,9 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { clearPaginationCache } from "@/services/shopify/products";
+import { clearPaginationCache } from "@/services/shopify/pagination";
 import { clearApiCache } from "@/services/shopify/api";
+import { clearGraphQLCache } from "@/services/shopify/graphql/client";
 
 export function useShopifySearch() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -16,7 +17,8 @@ export function useShopifySearch() {
     if (searchQuery !== searchInputValue) {
       // Reset pagination cache when search query changes
       clearPaginationCache('search');
-      clearApiCache(); // Clear API cache as well to force fresh results
+      clearApiCache(); // Clear REST API cache
+      clearGraphQLCache(); // Clear GraphQL cache
       
       setSearchQuery(searchInputValue);
       console.log(`Search query updated to: "${searchInputValue}"`);
@@ -33,6 +35,7 @@ export function useShopifySearch() {
       console.log("Clearing search");
       clearPaginationCache();
       clearApiCache();
+      clearGraphQLCache();
       setSearchInputValue("");
       setSearchQuery("");
       setIsSearchActive(false);

@@ -2,6 +2,7 @@
 import { toast } from "sonner";
 import { makeShopifyRequest } from "../api";
 import { clearApiCache } from "../api";
+import { clearGraphQLCache } from "../graphql/client";
 
 export const addImageToExistingProduct = async (
   productId: number,
@@ -40,7 +41,9 @@ export const addImageToExistingProduct = async (
     console.log("Image upload successful, image ID:", result.data.image.id);
     toast.success("Image added to product successfully!");
     
+    // Clear both REST and GraphQL caches
     clearApiCache();
+    clearGraphQLCache();
     
     return true;
   } catch (error) {

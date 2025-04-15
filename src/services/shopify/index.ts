@@ -19,7 +19,8 @@ export {
 
 // Re-export product functions
 export {
-  fetchShopifyProducts
+  fetchShopifyProducts,
+  clearAllCaches
 } from './products';
 
 // Re-export image functions

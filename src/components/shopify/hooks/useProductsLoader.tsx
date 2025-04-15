@@ -1,8 +1,6 @@
-
 import { useCallback, useEffect } from "react";
 import { ShopifyProductsResponse } from "@/services/shopify/types";
-import { fetchShopifyProducts, clearPaginationCache } from "@/services/shopify/products";
-import { clearApiCache } from "@/services/shopify/api";
+import { fetchShopifyProducts, clearAllCaches } from "@/services/shopify/products";
 import { toast } from "sonner";
 
 import { useShopifySearch } from "./useShopifySearch";
@@ -108,8 +106,8 @@ export function useProductsLoader() {
           errorMessage += "You've hit API rate limits. ";
         } else if (error.message.includes("CORS")) {
           errorMessage += "CORS proxy service is returning errors. ";
-        } else if (error.message.includes("page cannot be passed")) {
-          errorMessage += "Pagination error with search results. ";
+        } else if (error.message.includes("page cannot be passed") || error.message.includes("GraphQL errors")) {
+          errorMessage += "Search pagination error. ";
           if (currentPage > 1) {
             setCurrentPage(1);
             return;
@@ -131,8 +129,7 @@ export function useProductsLoader() {
   }, [baseRetryLoading, loadProducts]);
 
   const refreshProducts = useCallback(() => {
-    clearPaginationCache();
-    clearApiCache();
+    clearAllCaches();
     toast.info("Refreshing product list...");
     setCurrentPage(1);
     loadProducts(1, searchQuery, true);
