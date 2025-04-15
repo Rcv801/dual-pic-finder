@@ -34,7 +34,7 @@ export function useProductsLoader() {
         setHasNextPage(response.hasNextPage);
         
         // Set first product as selected if none is selected yet
-        if (selectedProductId === null) {
+        if (selectedProductId === null && response.products.length > 0) {
           setSelectedProductId(response.products[0].id);
         }
         
@@ -67,18 +67,20 @@ export function useProductsLoader() {
       // Provide more detailed error information
       let errorMessage = "Failed to load products. ";
       
-      if (error.message.includes("rate limit") || error.message.includes("429")) {
-        errorMessage += "You've hit API rate limits. ";
-      } else if (error.message.includes("CORS") || error.message.includes("Origin")) {
-        errorMessage += "CORS proxy service is returning errors. ";
-      } else if (error.message.includes("page cannot be passed") || error.message.includes("query cannot be passed")) {
-        errorMessage += "Pagination error with search results. ";
-        console.error("Pagination + query error details:", error);
-        
-        // Reset to first page on pagination error
-        if (currentPage > 1) {
-          setCurrentPage(1);
-          return; // Will trigger a re-fetch via useEffect
+      if (error.message && typeof error.message === 'string') {
+        if (error.message.includes("rate limit") || error.message.includes("429")) {
+          errorMessage += "You've hit API rate limits. ";
+        } else if (error.message.includes("CORS") || error.message.includes("Origin")) {
+          errorMessage += "CORS proxy service is returning errors. ";
+        } else if (error.message.includes("page cannot be passed") || error.message.includes("query cannot be passed")) {
+          errorMessage += "Pagination error with search results. ";
+          console.error("Pagination + query error details:", error);
+          
+          // Reset to first page on pagination error
+          if (currentPage > 1) {
+            setCurrentPage(1);
+            return; // Will trigger a re-fetch via useEffect
+          }
         }
       }
       
@@ -138,7 +140,7 @@ export function useProductsLoader() {
     
     if (searchQuery !== searchInputValue) {
       // Reset pagination cache when search query changes
-      clearPaginationCache();
+      clearPaginationCache('search');
       setSearchQuery(searchInputValue);
       setCurrentPage(1); // Reset to first page when search changes
       console.log(`Search query updated to: "${searchInputValue}"`);

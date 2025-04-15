@@ -1,3 +1,4 @@
+
 // Vercel Serverless Function to proxy Shopify API requests
 
 // Set CORS headers to allow requests from any origin
@@ -50,9 +51,19 @@ export default async function handler(req, res) {
     console.log(`Request method: ${method}`);
     console.log(`Request endpoint: ${targetEndpoint}`);
     
+    // Log search query if present
     if (targetEndpoint.includes('query=')) {
-      const searchQuery = targetEndpoint.match(/query=([^&]*)/)?.[1] || 'No query found';
-      console.log(`Search query (decoded): ${decodeURIComponent(searchQuery)}`);
+      try {
+        const searchQuery = targetEndpoint.match(/query=([^&]*)/)?.[1] || 'No query found';
+        console.log(`Search query (decoded): ${decodeURIComponent(searchQuery)}`);
+      } catch (e) {
+        console.log(`Error decoding search query: ${e.message}`);
+      }
+    }
+    
+    // Log pagination info if present
+    if (targetEndpoint.includes('page_info=')) {
+      console.log(`Request includes pagination cursor`);
     }
 
     // Prepare fetch options
@@ -94,16 +105,31 @@ export default async function handler(req, res) {
     // Parse the response based on content type
     const responseData = isJson ? await shopifyResponse.json() : await shopifyResponse.text();
 
-    // Log response data details
-    if (isJson && responseData.products) {
-      console.log(`Total products returned: ${responseData.products.length}`);
-      if (responseData.products.length > 0) {
-        console.log('First product:', {
-          id: responseData.products[0].id,
-          title: responseData.products[0].title
+    // Log detailed error information if the response isn't successful
+    if (!shopifyResponse.ok) {
+      console.log('\n=== SHOPIFY API ERROR DETAILS ===');
+      console.log(`Error status: ${shopifyResponse.status}`);
+      console.log('Error response:', responseData);
+      
+      if (shopifyResponse.status === 400 && responseData.errors) {
+        // Log specific error messages
+        Object.entries(responseData.errors).forEach(([key, value]) => {
+          console.log(`Error in ${key}: ${value}`);
         });
-      } else {
-        console.log('No products found in response');
+      }
+    }
+    else {
+      // Log response data details for successful responses
+      if (isJson && responseData.products) {
+        console.log(`Total products returned: ${responseData.products.length}`);
+        if (responseData.products.length > 0) {
+          console.log('First product:', {
+            id: responseData.products[0].id,
+            title: responseData.products[0].title
+          });
+        } else {
+          console.log('No products found in response');
+        }
       }
     }
 
