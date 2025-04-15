@@ -24,6 +24,7 @@ export function useProductsLoader() {
     
     try {
       console.log(`Loading products for page ${page}, query: "${query}"`);
+      // Always force refresh for search queries to avoid stale results
       const response: ShopifyProductsResponse = await fetchShopifyProducts(page, 50, query);
       
       console.log(`Response received: ${response.products.length} products, hasNextPage: ${response.hasNextPage}`);
@@ -47,6 +48,19 @@ export function useProductsLoader() {
         
         // Log first few product titles for debugging
         console.log(`First 3 products: ${response.products.slice(0, 3).map(p => p.title).join(', ')}`);
+        
+        // For search queries, verify if search results actually match the query
+        if (query) {
+          const searchTerm = query.toLowerCase();
+          const matchingProducts = response.products.filter(p => 
+            p.title.toLowerCase().includes(searchTerm)
+          );
+          
+          if (matchingProducts.length === 0 && response.products.length > 0) {
+            console.warn(`Warning: None of the returned products contain "${query}" in their title.`);
+            console.warn("Shopify search might be using broader match criteria.");
+          }
+        }
       } else if (query) {
         // Clear products for search with no results
         console.log(`Search "${query}" returned no products. Clearing product list.`);
@@ -131,7 +145,8 @@ export function useProductsLoader() {
   // Load products when page or search query changes
   useEffect(() => {
     console.log(`Effect triggered: page=${currentPage}, query="${searchQuery}"`);
-    loadProducts(currentPage, searchQuery);
+    // Always force refresh for searches to avoid stale results
+    loadProducts(currentPage, searchQuery, searchQuery !== "");
   }, [currentPage, searchQuery, loadProducts]);
 
   const handleSearch = (e: React.FormEvent) => {
@@ -141,9 +156,16 @@ export function useProductsLoader() {
     if (searchQuery !== searchInputValue) {
       // Reset pagination cache when search query changes
       clearPaginationCache('search');
+      clearApiCache(); // Clear API cache as well to force fresh results
+      
       setSearchQuery(searchInputValue);
       setCurrentPage(1); // Reset to first page when search changes
       console.log(`Search query updated to: "${searchInputValue}"`);
+      
+      // Display a toast to indicate search is in progress
+      if (searchInputValue) {
+        toast.info(`Searching for "${searchInputValue}"...`);
+      }
     }
   };
 
@@ -151,9 +173,11 @@ export function useProductsLoader() {
     if (searchQuery !== "") {
       console.log("Clearing search");
       clearPaginationCache();
+      clearApiCache(); // Clear API cache to ensure fresh results
       setSearchInputValue("");
       setSearchQuery("");
       setCurrentPage(1); // Reset to first page when search is cleared
+      toast.info("Search cleared");
     }
   };
 

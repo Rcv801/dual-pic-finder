@@ -36,6 +36,9 @@ export const makeShopifyRequest = async (
       }),
     };
     
+    // Log the request we're about to make
+    console.log(`Making ${method} request to Shopify via proxy: ${endpoint}`);
+    
     const response = await fetch(proxyUrl, options);
     
     if (response.status === 429) {
@@ -100,6 +103,8 @@ export const cachedShopifyRequest = async (
     return cachedResponse;
   }
   
+  console.log(`Making fresh API request for ${endpoint}`);
+  
   // Make the actual request
   const response = await makeShopifyRequest(endpoint, method, body);
   
@@ -116,7 +121,9 @@ export const cachedShopifyRequest = async (
 export const clearApiCache = (endpoint?: string) => {
   if (endpoint) {
     apiCache.delete(endpoint);
+    console.log(`Cache cleared for endpoint: ${endpoint}`);
   } else {
     apiCache.clear();
+    console.log("Complete API cache cleared");
   }
 };

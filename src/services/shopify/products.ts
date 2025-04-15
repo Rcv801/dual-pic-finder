@@ -21,10 +21,12 @@ export const fetchShopifyProducts = async (
     
     // Determine whether we're doing a search or regular fetch
     const isSearchMode = searchQuery.trim().length > 0;
+    console.log(`Search mode: ${isSearchMode ? 'YES' : 'NO'}`);
     
     // Clear pagination cache when doing a new search with a new query
     if (isSearchMode && page === 1) {
       clearPaginationCache('search');
+      console.log('Search pagination cache cleared for new search');
     }
     
     // Base endpoint preparation
@@ -40,6 +42,7 @@ export const fetchShopifyProducts = async (
         console.log(`Search endpoint (first page): ${endpoint}`);
         console.log(`Original query: "${searchQuery}"`);
         console.log(`Encoded query: "${formattedQuery}"`);
+        console.log(`IMPORTANT: This is a first page search request`);
       } 
       // For subsequent pages, use the cursor from search pagination
       else {
@@ -50,6 +53,7 @@ export const fetchShopifyProducts = async (
         if (cachedCursor) {
           endpoint = `products.json?limit=${limit}&page_info=${cachedCursor}`;
           console.log(`Search with pagination, using cached cursor for page ${page}`);
+          console.log(`Cursor: ${cachedCursor}`);
           
           // DO NOT add query parameter when using cursor-based pagination
           // as Shopify API doesn't support combining both
@@ -79,6 +83,7 @@ export const fetchShopifyProducts = async (
           
           endpoint = `products.json?limit=${limit}&page_info=${prevPageCursor}`;
           console.log(`Using cursor from previous search page: ${endpoint}`);
+          console.log(`Previous page cursor: ${prevPageCursor}`);
           
           // DO NOT add query parameter when using cursor-based pagination
         }
@@ -89,6 +94,7 @@ export const fetchShopifyProducts = async (
       // First page - simple request
       if (page === 1) {
         endpoint = `products.json?limit=${limit}`;
+        console.log(`Regular product listing (first page): ${endpoint}`);
       } 
       // Subsequent pages - use regular pagination cursors
       else {
@@ -97,6 +103,8 @@ export const fetchShopifyProducts = async (
         
         if (cachedCursor) {
           endpoint = `products.json?limit=${limit}&page_info=${cachedCursor}`;
+          console.log(`Regular pagination, using cached cursor for page ${page}`);
+          console.log(`Cursor: ${cachedCursor}`);
         } else {
           const prevPageCursor = cursorMap.get(page - 1);
           
@@ -117,13 +125,21 @@ export const fetchShopifyProducts = async (
           }
           
           endpoint = `products.json?limit=${limit}&page_info=${prevPageCursor}`;
+          console.log(`Using cursor from previous regular page: ${endpoint}`);
+          console.log(`Previous page cursor: ${prevPageCursor}`);
         }
       }
     }
     
     console.log(`Final endpoint being called: ${endpoint}`);
     
-    const { data, headers } = await cachedShopifyRequest(endpoint, "GET", null, isSearchMode);
+    // NEW: Don't use cache for search requests
+    const { data, headers } = await cachedShopifyRequest(
+      endpoint, 
+      "GET", 
+      null, 
+      isSearchMode || page > 1  // Force refresh for search or pagination
+    );
     
     console.log('\n=== FRONTEND RESPONSE DETAILS ===');
     console.log(`Products received: ${data.products?.length || 0}`);
@@ -146,6 +162,7 @@ export const fetchShopifyProducts = async (
         cursorMap.set(page + 1, nextPageCursor);
         
         console.log(`Saved ${isSearchMode ? 'search' : 'regular'} cursor for page ${page + 1}`);
+        console.log(`Next page cursor: ${nextPageCursor}`);
       }
     }
     
@@ -153,9 +170,39 @@ export const fetchShopifyProducts = async (
     if (isSearchMode) {
       console.log(`Search results for "${searchQuery}":`);
       console.log(`- Total products: ${data.products?.length || 0}`);
+      
+      // NEW: Added search relevance checking
       if (data.products?.length > 0) {
         console.log(`- First product: ${data.products[0].title}`);
         console.log(`- Last product: ${data.products[data.products.length - 1].title}`);
+        
+        // Check how many products actually contain the search term in their title
+        const searchTerm = searchQuery.toLowerCase().trim();
+        const matchingProducts = data.products.filter(
+          product => product.title.toLowerCase().includes(searchTerm)
+        );
+        
+        console.log(`\n=== SEARCH TERM MATCHING ===`);
+        console.log(`Products with "${searchTerm}" in title: ${matchingProducts.length} out of ${data.products.length}`);
+        
+        if (matchingProducts.length > 0) {
+          console.log("Matching product titles:");
+          matchingProducts.slice(0, 5).forEach((p, i) => {
+            console.log(`${i+1}. ${p.title}`);
+          });
+        } else {
+          console.log("No products directly match the search term in title.");
+          console.log("First 5 returned product titles:");
+          data.products.slice(0, 5).forEach((p, i) => {
+            console.log(`${i+1}. ${p.title}`);
+          });
+        }
+        
+        // If search returned products but none match the term in title, show a warning
+        if (matchingProducts.length === 0 && data.products.length > 0) {
+          console.warn(`WARNING: Shopify returned ${data.products.length} products for search "${searchQuery}" but none contain the term in their title.`);
+          console.warn("This might indicate that Shopify search is not working as expected.");
+        }
       }
     }
     

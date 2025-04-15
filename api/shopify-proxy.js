@@ -56,6 +56,11 @@ export default async function handler(req, res) {
       try {
         const searchQuery = targetEndpoint.match(/query=([^&]*)/)?.[1] || 'No query found';
         console.log(`Search query (decoded): ${decodeURIComponent(searchQuery)}`);
+        
+        // NEW: Additional debug info for search requests
+        console.log('SEARCH DEBUG: This is a product search request');
+        console.log(`SEARCH DEBUG: Raw endpoint: ${targetEndpoint}`);
+        console.log(`SEARCH DEBUG: Search term: ${decodeURIComponent(searchQuery)}`);
       } catch (e) {
         console.log(`Error decoding search query: ${e.message}`);
       }
@@ -64,6 +69,9 @@ export default async function handler(req, res) {
     // Log pagination info if present
     if (targetEndpoint.includes('page_info=')) {
       console.log(`Request includes pagination cursor`);
+      // NEW: Additional debug info for pagination
+      const pageInfo = targetEndpoint.match(/page_info=([^&]*)/)?.[1] || 'No cursor found';
+      console.log(`PAGINATION DEBUG: Using cursor: ${pageInfo}`);
     }
 
     // Prepare fetch options
@@ -122,11 +130,41 @@ export default async function handler(req, res) {
       // Log response data details for successful responses
       if (isJson && responseData.products) {
         console.log(`Total products returned: ${responseData.products.length}`);
+        
+        // NEW: Enhanced product response logging
+        console.log('\n=== PRODUCTS IN RESPONSE ===');
+        console.log(`Number of products returned by Shopify: ${responseData.products.length}`);
+        
         if (responseData.products.length > 0) {
           console.log('First product:', {
             id: responseData.products[0].id,
             title: responseData.products[0].title
           });
+          
+          // Show first 5 product titles to verify search results
+          const firstFiveProducts = responseData.products.slice(0, 5).map(p => p.title);
+          console.log('First 5 product titles:', firstFiveProducts);
+          
+          if (targetEndpoint.includes('query=')) {
+            // For search requests, show if the search term appears in the titles
+            try {
+              const searchQuery = targetEndpoint.match(/query=([^&]*)/)?.[1] || '';
+              const decodedQuery = decodeURIComponent(searchQuery).toLowerCase();
+              console.log(`\nSEARCH RELEVANCE CHECK for "${decodedQuery}":`);
+              
+              const matchingProducts = responseData.products.filter(p => 
+                p.title.toLowerCase().includes(decodedQuery)
+              );
+              
+              console.log(`Products with "${decodedQuery}" in title: ${matchingProducts.length} out of ${responseData.products.length}`);
+              
+              if (matchingProducts.length > 0) {
+                console.log('Matching products:', matchingProducts.slice(0, 3).map(p => p.title));
+              }
+            } catch (e) {
+              console.log(`Error in search relevance check: ${e.message}`);
+            }
+          }
         } else {
           console.log('No products found in response');
         }
