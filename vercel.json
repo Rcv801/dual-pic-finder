@@ -2,7 +2,7 @@
 {
   "version": 2,
   "functions": {
-    "api/shopify-proxy.js": {
+    "api/shopify-proxy.ts": {
       "memory": 1024,
       "maxDuration": 10
     }
@@ -10,7 +10,7 @@
   "routes": [
     {
       "src": "/api/shopify-proxy",
-      "dest": "/api/shopify-proxy.js"
+      "dest": "/api/shopify-proxy.ts"
     }
   ]
 }
