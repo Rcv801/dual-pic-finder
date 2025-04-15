@@ -18,7 +18,7 @@ export const executeGraphQLQuery = async (
   const { shopDomain, accessToken } = credentials;
   
   try {
-    // Use the Vercel serverless proxy endpoint
+    // Use the Vercel serverless proxy endpoint with relative URL to work in all environments
     const proxyUrl = "/api/shopify-proxy";
     
     const options: RequestInit = {

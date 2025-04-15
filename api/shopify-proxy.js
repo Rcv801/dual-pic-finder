@@ -42,8 +42,8 @@ export default async function handler(req, res) {
     }
 
     // Build the target Shopify API URL
-    // Use 2023-07 which is a stable and widely supported version
-    const apiVersion = '2023-07';
+    // Use 2023-10 which is the latest stable version
+    const apiVersion = '2023-10';
     let shopifyUrl;
     
     // Special handling for GraphQL endpoint which is different
@@ -59,13 +59,24 @@ export default async function handler(req, res) {
     console.log(`Request method: ${method}`);
     console.log(`Request endpoint: ${targetEndpoint}`);
     
+    // Log more detailed information for GraphQL requests
+    if (targetEndpoint === 'graphql.json' && body) {
+      console.log('GraphQL Request:');
+      if (body.query) {
+        console.log(`Query: ${body.query.substring(0, 100)}...`);
+      }
+      if (body.variables) {
+        console.log('Variables:', body.variables);
+      }
+    }
+    
     // Log search query if present
     if (targetEndpoint.includes('query=')) {
       try {
         const searchQuery = targetEndpoint.match(/query=([^&]*)/)?.[1] || 'No query found';
         console.log(`Search query (decoded): ${decodeURIComponent(searchQuery)}`);
         
-        // NEW: Additional debug info for search requests
+        // Additional debug info for search requests
         console.log('SEARCH DEBUG: This is a product search request');
         console.log(`SEARCH DEBUG: Raw endpoint: ${targetEndpoint}`);
         console.log(`SEARCH DEBUG: Search term: ${decodeURIComponent(searchQuery)}`);
@@ -77,7 +88,7 @@ export default async function handler(req, res) {
     // Log pagination info if present
     if (targetEndpoint.includes('page_info=')) {
       console.log(`Request includes pagination cursor`);
-      // NEW: Additional debug info for pagination
+      // Additional debug info for pagination
       const pageInfo = targetEndpoint.match(/page_info=([^&]*)/)?.[1] || 'No cursor found';
       console.log(`PAGINATION DEBUG: Using cursor: ${pageInfo}`);
     }
@@ -97,6 +108,7 @@ export default async function handler(req, res) {
     }
 
     // Make the request to Shopify API
+    console.log(`Making ${method} request to Shopify: ${shopifyUrl}`);
     const shopifyResponse = await fetch(shopifyUrl, fetchOptions);
     
     // Enhanced logging for responses
@@ -139,7 +151,7 @@ export default async function handler(req, res) {
       if (isJson && responseData.products) {
         console.log(`Total products returned: ${responseData.products.length}`);
         
-        // NEW: Enhanced product response logging
+        // Enhanced product response logging
         console.log('\n=== PRODUCTS IN RESPONSE ===');
         console.log(`Number of products returned by Shopify: ${responseData.products.length}`);
         
@@ -175,6 +187,30 @@ export default async function handler(req, res) {
           }
         } else {
           console.log('No products found in response');
+        }
+      }
+      
+      // GraphQL response logging
+      if (isJson && responseData.data && targetEndpoint === 'graphql.json') {
+        console.log('\n=== GRAPHQL RESPONSE ===');
+        console.log('GraphQL response received successfully');
+        
+        if (responseData.data.products && responseData.data.products.edges) {
+          const products = responseData.data.products.edges;
+          console.log(`Number of products returned: ${products.length}`);
+          
+          if (products.length > 0) {
+            console.log('First product:', {
+              id: products[0].node.id,
+              title: products[0].node.title
+            });
+            
+            // Show first 5 product titles
+            const firstFiveProducts = products.slice(0, 5).map(edge => edge.node.title);
+            console.log('First 5 product titles:', firstFiveProducts);
+          } else {
+            console.log('No products found in GraphQL response');
+          }
         }
       }
     }
