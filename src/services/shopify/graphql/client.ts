@@ -19,7 +19,7 @@ export const executeGraphQLQuery = async (
   
   try {
     // Use the Vercel serverless proxy endpoint
-    const proxyUrl = "https://dual-pic-finder.vercel.app/api/shopify-proxy";
+    const proxyUrl = "/api/shopify-proxy";
     
     const options: RequestInit = {
       method: "POST",
@@ -62,6 +62,12 @@ export const executeGraphQLQuery = async (
       throw new Error(`GraphQL errors: ${errors[0]?.message || JSON.stringify(errors)}`);
     }
     
+    // For a successful GraphQL response, the data should be in responseData.data.data
+    if (responseData.data && responseData.data.data) {
+      return responseData.data.data;
+    }
+    
+    // If we didn't get the expected structure, return what we have
     return responseData.data;
   } catch (error) {
     console.error("Shopify GraphQL API request failed:", error);

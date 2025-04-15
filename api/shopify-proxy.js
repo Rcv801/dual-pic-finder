@@ -42,7 +42,8 @@ export default async function handler(req, res) {
     }
 
     // Build the target Shopify API URL
-    const apiVersion = '2023-04'; // Update to a supported version
+    // Use 2023-07 which is a stable and widely supported version
+    const apiVersion = '2023-07';
     let shopifyUrl;
     
     // Special handling for GraphQL endpoint which is different
