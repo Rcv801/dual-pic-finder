@@ -1,4 +1,3 @@
-
 export const logRequestDetails = (shopifyUrl: string, method: string, targetEndpoint: string, body?: any) => {
   console.log('\n=== SHOPIFY API REQUEST DETAILS ===');
   console.log(`Full Shopify URL: ${shopifyUrl}`);
@@ -39,6 +38,15 @@ const logPaginationDetails = (targetEndpoint: string) => {
     const pageInfo = targetEndpoint.match(/page_info=([^&]*)/)?.[1] || 'No cursor found';
     console.log(`PAGINATION DEBUG: Using cursor: ${pageInfo}`);
   }
+};
+
+export const logResponseHeaders = (headers: Headers): void => {
+  console.log('\n=== RESPONSE HEADERS ===');
+  headers.forEach((value, key) => {
+    if (key.toLowerCase() === 'link' || key.toLowerCase().startsWith('x-shopify')) {
+      console.log(`${key}: ${value}`);
+    }
+  });
 };
 
 export const logResponseDetails = (response: Response, responseData: any) => {
