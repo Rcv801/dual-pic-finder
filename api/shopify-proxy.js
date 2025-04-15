@@ -42,8 +42,15 @@ export default async function handler(req, res) {
     }
 
     // Build the target Shopify API URL
-    const apiVersion = '2025-04';
-    const shopifyUrl = `https://${shopDomain}/admin/api/${apiVersion}/${targetEndpoint}`;
+    const apiVersion = '2023-04'; // Update to a supported version
+    let shopifyUrl;
+    
+    // Special handling for GraphQL endpoint which is different
+    if (targetEndpoint === 'graphql.json') {
+      shopifyUrl = `https://${shopDomain}/admin/api/${apiVersion}/graphql.json`;
+    } else {
+      shopifyUrl = `https://${shopDomain}/admin/api/${apiVersion}/${targetEndpoint}`;
+    }
     
     // Enhanced logging for all requests
     console.log('\n=== SHOPIFY API REQUEST DETAILS ===');
