@@ -1,5 +1,5 @@
 
-import { corsHeaders, handleOptions } from '../utils/corsHeaders';
+import { corsHeaders } from '../utils/corsHeaders';
 import { buildShopifyUrl } from '../utils/urlBuilder';
 import { logRequestDetails, logResponseHeaders, logResponseDetails } from '../utils/logging';
 

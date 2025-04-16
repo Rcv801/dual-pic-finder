@@ -5,12 +5,20 @@
     "api/shopify-proxy.ts": {
       "memory": 1024,
       "maxDuration": 10
+    },
+    "api/test.ts": {
+      "memory": 256,
+      "maxDuration": 5
     }
   },
   "routes": [
     {
       "src": "/api/shopify-proxy",
       "dest": "/api/shopify-proxy.ts"
+    },
+    {
+      "src": "/api/test",
+      "dest": "/api/test.ts"
     }
   ]
 }
