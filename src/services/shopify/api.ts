@@ -19,8 +19,9 @@ export const makeShopifyRequest = async (
   const { shopDomain, accessToken } = credentials;
   
   try {
-    // Use the Vercel serverless proxy endpoint with relative URL
-    const proxyUrl = "/api/shopify-proxy";
+    // Use the simplified endpoint first
+    const proxyUrl = "/api/shopify-simple";
+    console.log(`Making ${method} request to Shopify via simplified proxy: ${endpoint}`);
     
     const options: RequestInit = {
       method: "POST", // Always POST to our proxy
@@ -36,10 +37,27 @@ export const makeShopifyRequest = async (
       }),
     };
     
-    // Log the request we're about to make
-    console.log(`Making ${method} request to Shopify via proxy: ${endpoint}`);
+    // Try with simplified proxy first
+    let response;
+    try {
+      response = await fetch(proxyUrl, options);
+    } catch (error: any) {
+      console.error(`Failed to fetch using simplified proxy: ${error.message}`);
+      
+      // If simplified proxy fails, try the original proxy
+      console.log("Falling back to original proxy...");
+      try {
+        response = await fetch("/api/shopify-proxy", options);
+      } catch (fallbackError: any) {
+        console.error(`Both proxy requests failed:`, fallbackError);
+        toast.error("Failed to connect to any Shopify API proxy");
+        throw new Error(`Shopify proxy connection failed: ${fallbackError.message}`);
+      }
+    }
     
-    const response = await fetch(proxyUrl, options);
+    if (!response) {
+      throw new Error("No response received from proxy");
+    }
     
     if (response.status === 429) {
       // Rate limit exceeded - implement exponential backoff

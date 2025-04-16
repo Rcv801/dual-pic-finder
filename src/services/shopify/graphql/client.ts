@@ -1,4 +1,3 @@
-
 import { getShopifyCredentials } from "../credentials";
 import { toast } from "sonner";
 
@@ -18,9 +17,9 @@ export const executeGraphQLQuery = async (
   const { shopDomain, accessToken } = credentials;
   
   try {
-    // Use the absolute Vercel serverless proxy endpoint
-    const absoluteProxyUrl = "https://dual-pic-finder.vercel.app/api/shopify-proxy";
-    const relativeProxyUrl = "/api/shopify-proxy";
+    // Try with the simplified proxy first
+    const simplifiedProxyUrl = "/api/shopify-simple";
+    const originalProxyUrl = "/api/shopify-proxy";
     
     const requestBody = JSON.stringify({
       shopDomain,
@@ -40,36 +39,30 @@ export const executeGraphQLQuery = async (
       },
       body: requestBody,
       // Add timeout to abort long requests
-      signal: AbortSignal.timeout(3000)
+      signal: AbortSignal.timeout(10000) // 10-second timeout (increased from 3s)
     };
     
-    // First try with absolute URL
-    console.log(`Making GraphQL request to Shopify via absolute proxy URL: ${absoluteProxyUrl}`);
+    // First try with simplified proxy
+    console.log(`Making GraphQL request via simplified proxy: ${simplifiedProxyUrl}`);
     console.log(`Request variables:`, {
       ...variables,
       query: query.substring(0, 100) + "..." // Log truncated query for debugging
     });
     
     let response;
-    let useRelativeUrl = false;
-    
     try {
-      response = await fetch(absoluteProxyUrl, options);
+      response = await fetch(simplifiedProxyUrl, options);
+      console.log(`Simplified proxy response status: ${response.status}`);
     } catch (error: any) {
-      console.warn(`Failed to fetch using absolute URL: ${error.message}`);
-      console.log("Falling back to relative URL");
-      useRelativeUrl = true;
-    }
-    
-    // If absolute URL failed, try relative URL
-    if (useRelativeUrl) {
-      console.log(`Retrying with relative proxy URL: ${relativeProxyUrl}`);
+      console.warn(`Failed to fetch using simplified proxy: ${error.message}`);
+      console.log("Falling back to original proxy");
       
       try {
-        response = await fetch(relativeProxyUrl, options);
+        response = await fetch(originalProxyUrl, options);
+        console.log(`Original proxy response status: ${response?.status}`);
       } catch (fallbackError: any) {
-        console.error(`Both absolute and relative URL requests failed:`, fallbackError);
-        toast.error("Failed to connect to Shopify API proxy");
+        console.error(`Both proxy requests failed:`, fallbackError);
+        toast.error("Failed to connect to any Shopify API proxy");
         throw new Error(`Shopify proxy connection failed: ${fallbackError.message}`);
       }
     }
@@ -82,8 +75,6 @@ export const executeGraphQLQuery = async (
       toast.error("API rate limit exceeded. Please try again later.");
       throw new Error("Shopify API rate limit exceeded");
     }
-    
-    console.log(`Response status: ${response.status}`);
     
     // Log response headers for debugging
     const responseHeaders: Record<string, string> = {};
@@ -122,9 +113,9 @@ export const executeGraphQLQuery = async (
   } catch (error: any) {
     // Detect if this is a timeout error
     if (error.name === 'TimeoutError' || error.name === 'AbortError') {
-      console.error("Shopify GraphQL API request timed out after 3 seconds");
+      console.error("Shopify GraphQL API request timed out after 10 seconds");
       toast.error("Request to Shopify timed out. Network may be slow.");
-      throw new Error("Shopify request timed out after 3 seconds");
+      throw new Error("Shopify request timed out");
     }
     
     // Detect CORS errors (this is an approximation since CORS errors don't have a specific type)
