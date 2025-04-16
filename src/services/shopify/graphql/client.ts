@@ -19,33 +19,78 @@ export const executeGraphQLQuery = async (
   
   try {
     // Use the absolute Vercel serverless proxy endpoint
-    const proxyUrl = "https://dual-pic-finder.vercel.app/api/shopify-proxy";
+    const absoluteProxyUrl = "https://dual-pic-finder.vercel.app/api/shopify-proxy";
+    const relativeProxyUrl = "/api/shopify-proxy";
+    
+    const requestBody = JSON.stringify({
+      shopDomain,
+      accessToken,
+      targetEndpoint: "graphql.json", // GraphQL endpoint
+      method: "POST",
+      body: {
+        query,
+        variables
+      },
+    });
     
     const options: RequestInit = {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        shopDomain,
-        accessToken,
-        targetEndpoint: "graphql.json", // GraphQL endpoint
-        method: "POST",
-        body: {
-          query,
-          variables
-        },
-      }),
+      body: requestBody,
+      // Add timeout to abort long requests
+      signal: AbortSignal.timeout(3000)
     };
     
-    console.log("Making GraphQL request to Shopify via proxy");
+    // First try with absolute URL
+    console.log(`Making GraphQL request to Shopify via absolute proxy URL: ${absoluteProxyUrl}`);
+    console.log(`Request variables:`, {
+      ...variables,
+      query: query.substring(0, 100) + "..." // Log truncated query for debugging
+    });
     
-    const response = await fetch(proxyUrl, options);
+    let response;
+    let useRelativeUrl = false;
+    
+    try {
+      response = await fetch(absoluteProxyUrl, options);
+    } catch (error: any) {
+      console.warn(`Failed to fetch using absolute URL: ${error.message}`);
+      console.log("Falling back to relative URL");
+      useRelativeUrl = true;
+    }
+    
+    // If absolute URL failed, try relative URL
+    if (useRelativeUrl) {
+      console.log(`Retrying with relative proxy URL: ${relativeProxyUrl}`);
+      
+      try {
+        response = await fetch(relativeProxyUrl, options);
+      } catch (fallbackError: any) {
+        console.error(`Both absolute and relative URL requests failed:`, fallbackError);
+        toast.error("Failed to connect to Shopify API proxy");
+        throw new Error(`Shopify proxy connection failed: ${fallbackError.message}`);
+      }
+    }
+    
+    if (!response) {
+      throw new Error("No response received from proxy");
+    }
     
     if (response.status === 429) {
       toast.error("API rate limit exceeded. Please try again later.");
       throw new Error("Shopify API rate limit exceeded");
     }
+    
+    console.log(`Response status: ${response.status}`);
+    
+    // Log response headers for debugging
+    const responseHeaders: Record<string, string> = {};
+    response.headers.forEach((value, key) => {
+      responseHeaders[key] = value;
+    });
+    console.log("Response headers:", responseHeaders);
     
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -54,6 +99,11 @@ export const executeGraphQLQuery = async (
     }
     
     const responseData = await response.json();
+    console.log("GraphQL response received:", {
+      status: response.status,
+      hasData: !!responseData.data,
+      hasErrors: !!(responseData.data?.errors || responseData.errors)
+    });
     
     // Check for GraphQL errors
     if (responseData.data?.errors || responseData.errors) {
@@ -69,7 +119,21 @@ export const executeGraphQLQuery = async (
     
     // If we didn't get the expected structure, return what we have
     return responseData.data;
-  } catch (error) {
+  } catch (error: any) {
+    // Detect if this is a timeout error
+    if (error.name === 'TimeoutError' || error.name === 'AbortError') {
+      console.error("Shopify GraphQL API request timed out after 3 seconds");
+      toast.error("Request to Shopify timed out. Network may be slow.");
+      throw new Error("Shopify request timed out after 3 seconds");
+    }
+    
+    // Detect CORS errors (this is an approximation since CORS errors don't have a specific type)
+    if (error.message && error.message.includes('CORS')) {
+      console.error("Possible CORS issue with Shopify API request:", error);
+      toast.error("CORS error connecting to Shopify API");
+      throw new Error(`Shopify API CORS error: ${error.message}`);
+    }
+    
     console.error("Shopify GraphQL API request failed:", error);
     throw error;
   }
