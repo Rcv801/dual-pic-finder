@@ -6,7 +6,6 @@ import SearchHistory from "@/components/SearchHistory";
 import ComparisonView from "@/components/ComparisonView";
 import { Button } from "@/components/ui/button";
 import { SplitSquareVertical } from "lucide-react";
-import ShopifyConnect from "@/components/shopify/ShopifyConnect";
 
 const MAX_HISTORY_ITEMS = 10;
 
@@ -95,8 +94,6 @@ const Index = () => {
           <DualSearchForm onSearch={handleSearch} isLoading={isLoading} />
           
           <div className="flex gap-2 self-end">
-            <ShopifyConnect />
-            
             <SearchHistory 
               history={searchHistory}
               onSelectHistory={handleSelectHistory}

@@ -2,10 +2,6 @@
 {
   "version": 2,
   "functions": {
-    "api/shopify-proxy.ts": {
-      "memory": 1024,
-      "maxDuration": 10
-    },
     "api/test.ts": {
       "memory": 256,
       "maxDuration": 5
@@ -13,17 +9,9 @@
     "api/hello.ts": {
       "memory": 128,
       "maxDuration": 5
-    },
-    "api/shopify-simple.ts": {
-      "memory": 1024,
-      "maxDuration": 10
     }
   },
   "routes": [
-    {
-      "src": "/api/shopify-proxy",
-      "dest": "/api/shopify-proxy.ts"
-    },
     {
       "src": "/api/test",
       "dest": "/api/test.ts"
@@ -31,10 +19,6 @@
     {
       "src": "/api/hello",
       "dest": "/api/hello.ts"
-    },
-    {
-      "src": "/api/shopify-simple",
-      "dest": "/api/shopify-simple.ts"
     }
   ]
 }
