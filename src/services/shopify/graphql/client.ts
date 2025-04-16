@@ -18,8 +18,8 @@ export const executeGraphQLQuery = async (
   const { shopDomain, accessToken } = credentials;
   
   try {
-    // Use the Vercel serverless proxy endpoint with relative URL to work in all environments
-    const proxyUrl = "/api/shopify-proxy";
+    // Use the absolute Vercel serverless proxy endpoint
+    const proxyUrl = "https://dual-pic-finder.vercel.app/api/shopify-proxy";
     
     const options: RequestInit = {
       method: "POST",
